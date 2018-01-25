@@ -1,8 +1,8 @@
-# Chat module for ZF2
+# Chat module for ZF2 and Bootstrap 3
 
 ## Installation
 
-```composer require dgac/ZFMattermostchatModule```
+```composer require brunospy/mattemostmodule```
 
 ## Usage
 
