@@ -1,0 +1,24 @@
+{
+  "name": "brunospy/mattermostmodule",
+  "description": "Module to use Mattermost in a Zend Framework and Bootstrap application",
+  "type": "library",
+  "keywords": ["mattermost", "chat", "bootstrap", "zend framework", "zf2"],
+  "homepage": "https://github.com/BrunoSpy/MattermostModule",
+  "authors": [
+  {
+    "name": "Bruno Spyckerelle",
+    "email": "bruno@spyckerelle.fr"
+  }
+],
+  "require": {
+    "gnello/php-mattermost-driver": "^2.3",
+    "zendframework/zend-mvc": "^2.7",
+    "maglnet/magl-markdown": "~1.1"
+  },
+  "license": "GPL-3.0-or-later",
+  "autoload": {
+    "psr-4": {
+      "MattermostMessenger\\": "src/"
+    }
+  }
+}

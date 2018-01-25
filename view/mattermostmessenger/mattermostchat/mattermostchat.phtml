@@ -1,0 +1,111 @@
+<div class="container app">
+    <div class="chat-reduce" style="display: none"><button class="btn btn-info"><i class="fa fa-comments fa-2x"></i></button></div>
+    <div class="row app-one">
+        <div class="col-sm-4 side">
+            <div class="side-one">
+                <div class="row heading">
+                    <div class="col-sm-3 col-xs-3 heading-avatar">
+                        <div class="heading-avatar-icon">
+                            <!--<img src="">-->
+                        </div>
+                    </div>
+                    <div class="col-sm-1 col-xs-1  heading-dot  pull-right">
+                        <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
+                    </div>
+                    <div class="col-sm-2 col-xs-2 heading-compose  pull-right">
+                        <i class="fa fa-comments fa-2x  pull-right" aria-hidden="true"></i>
+                    </div>
+                </div>
+
+                <div class="row searchBox">
+                    <div class="col-sm-12 searchBox-inner">
+                        <div class="form-group has-feedback">
+                            <input id="searchText" type="text" class="form-control" name="searchText" placeholder="Search">
+                            <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row sideBar load">
+                    <?php
+                    foreach ($this->users as $user) {
+                        echo $this->user($user->name, $user->avatarURL, $user->lastseen);
+                    }
+                    ?>
+                </div>
+
+            </div>
+
+            <div class="side-two">
+                <div class="row groups-heading">
+                    <div class="row groups-main">
+                        <div class="col-sm-2 col-xs-2 groups-back">
+                            <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                        </div>
+                        <div class="col-sm-10 col-xs-10 groups-title">
+                            Mes groupes
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row composeBox">
+                    <div class="col-sm-12 composeBox-inner">
+                        <div class="form-group has-feedback">
+                            <input id="composeText" type="text" class="form-control" name="searchText" placeholder="Rechercher mes groupes">
+                            <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row compose-sideBar load">
+
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-8 conversation">
+            <div class="row heading">
+                <div class="col-sm-7 col-xs-6 heading-name">
+                    <a class="heading-name-meta" href="#"><i class="fa fa-users fa-2x"></i> <span class="channel-name">Channel Name</span>
+                    </a>
+                    <span class="heading-online">Online</span>
+                </div>
+                <div class="col-sm-2 col-xs-2  heading-dot pull-right">
+                    <!--<i class="fa fa-window-close pull-right" aria-hidden="true"></i>-->
+                    <i id="reduce-chat" class="fa fa-window-minimize pull-right" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <div class="row message load" id="conversation">
+                <div class="row message-previous">
+                    <div class="col-sm-12 previous">
+                        <a onclick="previous(this)" id="ankitjain28" name="20">
+                            Charger les messages précédents !
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+
+
+            <div class="row reply">
+                <div class="col-sm-1 col-xs-1 reply-emojis">
+                    <i class="fa fa-smile-o fa-2x"></i>
+                </div>
+                <form id="send-form" action="<?php echo $this->url('mattermost', array('controller'=>'mattermostchat', 'action'=>'sendMessage'))?>">
+                    <div class="col-sm-10 col-xs-10 reply-main">
+                        <textarea name="comment" class="form-control" rows="1" id="comment"></textarea>
+                    </div>
+                    <!--<div class="col-sm-1 col-xs-1 reply-recording">
+                        <i class="fa fa-microphone fa-2x" aria-hidden="true"></i>
+                    </div>-->
+                    <div class="col-sm-1 col-xs-1 reply-send">
+                        <button class="btn btn-sm" type="submit"><i class="fa fa-send fa-2x" aria-hidden="true"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
