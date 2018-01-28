@@ -42,19 +42,22 @@ class MattermostService
     private function getClient()
     {
         if($this->client == null) {
-            $container = new Container(array(
+            $containerOptions = array(
                 'driver' => array(
                     'url' => $this->mattermost['server_url'],
                     'login_id' => $this->mattermost['login'],
                     'password' => $this->mattermost['password']
-                ),
-                'guzzle' => array(
-                    'proxy' => [
-                        'http'  => 'http://jules.lfpo.aviation:8080', // Use this proxy with "http"
-                        'https' => 'http://jules.lfpo.aviation:8080',
-                        ]
                 )
-            ));
+            );
+            if(array_key_exists('proxy', $this->mattermost)) {
+                $containerOptions['guzzle'] = array(
+                    'proxy' => [
+                        'http'  => $this->mattermost['proxy'],
+                        'https' => $this->mattermost['proxy'],
+                    ]
+                );
+            }
+            $container = new Container($containerOptions);
             $this->client = new Driver($container);
             $result = $this->client->authenticate();
             if($result->getStatusCode() == 200) {

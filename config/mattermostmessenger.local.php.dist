@@ -5,6 +5,7 @@ return array(
         'login' => 'login used to connect to the server',
         'password' => 'well, the password of the aforementioned user',
         'team_id' => 'Name of the team to use',
-        'defaultchannelid' => '[Optional] id of the channel to show at first load'
+        'defaultchannelid' => '[Optional] id of the channel to show at first load',
+        'proxy' => '[Optional] Http proxy address'
     )
 );
