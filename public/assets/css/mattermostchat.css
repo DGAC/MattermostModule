@@ -246,6 +246,18 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   padding: 10px !important;
 }
 
+.sideBar ul.list {
+  padding:0px;
+}
+
+.sideBar li.list-inline {
+  margin-left: 0px;
+}
+
+#users {
+  height: 100%;
+}
+
 .name-meta {
   font-size: 100%;
   padding: 1% !important;
@@ -507,6 +519,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 }
 
 .reply-main textarea {
+  display: block;
+  box-sizing: padding-box;
   width: 100%;
   resize: none;
   overflow: hidden;

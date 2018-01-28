@@ -1,8 +1,10 @@
 # Chat module for ZF2 and Bootstrap 3
 
+**WIP : You can try it but it needs more love :)**
+
 ## Installation
 
-```composer require brunospy/mattemostmodule```
+```composer require brunospy/mattermostmodule```
 
 ## Usage
 

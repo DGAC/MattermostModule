@@ -36,7 +36,7 @@
          *
          * @memberOf $
          */
-        version: "0.0.2",
+        version: "0.0.3",
 
         //default options
         options: {
@@ -107,7 +107,7 @@
             //on change chat
             this.element.on('click', '.group', function(event){
                 var me = $(this);
-                if(me.data('id').localeCompare(self.currentChannelId) > -1) {
+                if(me.data('id').localeCompare(self.currentChannelId) !== 0) {
                     self.element.find('.groups-back').trigger('click');
                     self.changeChannel(me.data('id'), me.data('name'));
                 }
@@ -126,6 +126,36 @@
                 self.element.find('.app-one').show();
                 self.element.find('.chat-reduce').hide();
             });
+
+            //resize textarea if multiline
+            this.element
+                .one('focus.autoExpand', 'textarea.autoExpand', function(){
+                    var savedValue = this.value;
+                    this.value = '';
+                    this.baseScrollHeight = this.scrollHeight;
+                    this.value = savedValue;
+                 })
+                .on('input.autoExpand', 'textarea.autoExpand', function(){
+                    var minRows = this.getAttribute('data-min-rows')|0, rows;
+                    this.rows = minRows;
+                    rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 23);
+                    this.rows = minRows + rows;
+                    self.element.find('#conversation').css('height',395-22.85*rows+'px');
+                    self.element.find('.reply').css('height', 60+22.85*rows+'px');
+                });
+
+            //submit on enter and newline on shift+enter
+            this.element.find('#comment').keypress(function(e){
+                if(e.which == 13) {
+                    if(e.shiftKey) {
+                        $('#comment').append($("#comment").val()+"<br />");
+                    } else {
+                        e.preventDefault();
+                        $("#send-form").submit();
+                    }
+                }
+            });
+
             //initialize chat
             $.when(
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getDefaultChannelId?teamid=' + self.options.teamName, function (data) {
@@ -188,7 +218,7 @@
         changeChannel : function(channelId, channelName) {
             var self = this;
             //empty sideBar and conversation
-            this.element.find('.sideBar').empty();
+            this.element.find('.sideBar ul').empty();
             this.element.find('.message-previous').nextAll().remove();
             this.element.find('.channel-name').text(channelName);
             self.currentChannelId = channelId;
@@ -197,9 +227,7 @@
             });
             //fetch members
             $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getChannelMembers?channelid='+self.currentChannelId, function(data){
-                for(var i in data){
-                    self._addUser(data[i]);
-                }
+                self._addUsers(data);
             });
         },
         /* Private Methods */
@@ -260,42 +288,52 @@
                 '</div>');
             $("#conversation").append(post);
         },
-        _addUser: function(data) {
-            var date = moment(data.lastviewedat);
-            var dateString = date.format("ddd h:mm");
-            var user = $(
-                '<div class="row sideBar-body">'+
-                    '<div class="col-sm-3 col-xs-3 sideBar-avatar">'+
-                    '</div>'+
-                    '<div class="col-sm-9 col-xs-9 sideBar-main">'+
-                        '<div class="row">'+
-                            '<div class="col-sm-8 col-xs-8 sideBar-name">'+
-                                '<span class="name-meta">'+data.username+
-                                '</span>'+
-                            '</div>'+
-                            '<div class="col-sm-4 col-xs-4 pull-right sideBar-time">'+
-                                '<span class="time-meta pull-right">'+ dateString+
-                                '</span>'+
-                            '</div>'+
-                        '</div>'+
-                    '</div>'+
-                '</div>');
-            if(data.picture !== null) {
-                var picture = $('<div class="avatar-icon">'+
-                '<img src="'+data.picture+'">'+
-                '</div>');
-                user.find('.sideBar-avatar').append(picture);
-            } else {
-                var firstLetter = data.username.charAt(0).toUpperCase();
-                var color = this._getRandomColor();
-                var textColor = this._textColor(this._hex2rgb(color));
-                var initial = $('<div class="heading-avatar-circle" style="background-color: '+color+'">'+
-                    '<span class="heading-avatar-initials" style="color: '+textColor+'">'+firstLetter+'</span>' +
-                    '</div>');
-                user.find('.sideBar-avatar').append(initial);
-            }
-
-            $(".side-one .sideBar").append(user);
+        _addUsers: function(data){
+            var self = this;
+            var options = {
+                valueNames: [
+                    'name',
+                    'lastseen',
+                    'initials'
+                ],
+                item: '<li class="list-inline"><div class="row sideBar-body">'+
+                '<div class="col-sm-3 col-xs-3 sideBar-avatar">'+
+                '<div class="heading-avatar-circle">'+
+                '<span class="heading-avatar-initials initials"></span>' +
+                '</div>'+
+                '</div>'+
+                '<div class="col-sm-9 col-xs-9 sideBar-main">'+
+                '<div class="row">'+
+                '<div class="col-sm-8 col-xs-8 sideBar-name name">'+
+                '<span class="name-meta">'+
+                '</span>'+
+                '</div>'+
+                '<div class="col-sm-4 col-xs-4 pull-right sideBar-time">'+
+                '<span class="time-meta pull-right lastseen">'+
+                '</span>'+
+                '</div>'+
+                '</div>'+
+                '</div>'+
+                '</div></li>'
+            };
+            var values = [];
+            for(var i in data){
+                var date = moment(data[i].lastviewedat);
+                var dateString = date.format("ddd h:mm");
+                var value = {
+                    name: data[i].username,
+                    lastseen: dateString,
+                    initials: data[i].username.charAt(0).toUpperCase()
+                };
+                values.push(value);
+            };
+            var userList = new List('users', options, values);
+            this.element.find('.heading-avatar-circle').each(function(index){
+                var color = self._getRandomColor();
+                var textColor = self._textColor(self._hex2rgb(color));
+                $(this).css('background-color', color);
+                $(this).find('.heading-avatar-initials').css('color', textColor);
+            });
         },
         _addGroup: function(data) {
             var firstLetter = data.name.charAt(0).toUpperCase();
