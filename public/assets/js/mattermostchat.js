@@ -51,15 +51,13 @@
         _create: function () {
             var self = this;
             //register events
-            this.element.on('click', '.heading-compose', function(){
+            this.element.on('click', '.heading-groups', function(){
                 $(".side-two").css({
                     "left": "0"
                 });
-                self.element.find('.compose-sideBar').empty();
+                self.element.find('.compose-sideBar ul').empty();
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostChat/getMyChannels?teamid='+self.options.teamName, function(data){
-                    for(var i in data){
-                        self._addGroup(data[i]);
-                    }
+                    self._addGroups(data);
                 });
             });
             this.element.on('click', '.groups-back', function(){
@@ -67,7 +65,7 @@
                     "left": "-100%"
                 });
             });
-            this.element.on('click', '.heading-name-meta', function(){
+            this.element.on('click', '.heading-name-meta, .heading-close', function(){
                 if(self.element.find('.side').is(':visible')) {
                     self.element.find('.side').hide();
                     var container = self.element.find('.container');
@@ -106,7 +104,7 @@
 
             //on change chat
             this.element.on('click', '.group', function(event){
-                var me = $(this);
+                var me = $(this).parent();
                 if(me.data('id').localeCompare(self.currentChannelId) !== 0) {
                     self.element.find('.groups-back').trigger('click');
                     self.changeChannel(me.data('id'), me.data('name'));
@@ -335,32 +333,52 @@
                 $(this).find('.heading-avatar-initials').css('color', textColor);
             });
         },
-        _addGroup: function(data) {
-            var firstLetter = data.name.charAt(0).toUpperCase();
-            var color = this._getRandomColor();
-            var textColor = this._textColor(this._hex2rgb(color));
-            var team = $(
-                '<div class="row sideBar-body group" data-id="'+data.id+'" data-name="'+data.name+'">'+
+        _addGroups: function(data) {
+            var self = this;
+            var options = {
+                valueNames: [
+                    'spanname',
+                    'initial',
+                    {data: ['id', 'name']},
+                ],
+                item: '<li class="list-inline">' +
+                '<div class="row sideBar-body group">'+
                     '<div class="col-sm-3 col-xs-3 sideBar-avatar">'+
-                        '<div class="heading-avatar-circle" style="background-color: '+color+'">'+
-                            '<span class="heading-avatar-initials" style="color: '+textColor+'">'+firstLetter+'</span>' +
+                        '<div class="heading-avatar-circle">'+
+                            '<span class="heading-avatar-initials initial"></span>' +
                         '</div>'+
                     '</div>'+
                     '<div class="col-sm-9 col-xs-9 sideBar-main">'+
                         '<div class="row">'+
                             '<div class="col-sm-8 col-xs-8 sideBar-name">'+
-                                '<span class="name-meta">'+data.name+
-                                '</span>'+
+                                '<span class="name-meta spanname"></span>'+
                             '</div>'+
                             '<div class="col-sm-4 col-xs-4 pull-right sideBar-time">'+
                             '</div>'+
                         '</div>'+
                     '</div>'+
-                '</div>');
-            if(this.currentChannelId.localeCompare(data.id) == 0) {
-                team.find('.sideBar-time').append('<i class="fa fa-check fa-2x"></i>');
+                '</div></li>'
+            };
+            var values = [];
+            for(var i in data) {
+                var value = {
+                    spanname: data[i].name,
+                    initial: data[i].name.charAt(0).toUpperCase(),
+                    id: data[i].id,
+                    name: data[i].name
+                };
+                values.push(value);
             }
-            this.element.find('.compose-sideBar').append(team);
+            var groupList = new List('groups', options, values);
+            this.element.find('.group').each(function(index){
+                var color = self._getRandomColor();
+                var textColor = self._textColor(self._hex2rgb(color));
+                $(this).find('.heading-avatar-circle').css('background-color', color);
+                $(this).find('.heading-avatar-initials').css('color', textColor);
+                if(self.currentChannelId.localeCompare($(this).parent().data('id')) == 0){
+                    $(this).find('.sideBar-time').append('<i class="fa fa-check fa-2x"></i>');
+                }
+            });
         },
         _refresh: function() {
             var lastid = $(".message-body").last().data('id');

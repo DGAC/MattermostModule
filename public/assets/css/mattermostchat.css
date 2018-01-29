@@ -148,23 +148,35 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   font-size: 12px;
   color: #93918f;
 }
-.heading-compose {
+.heading-groups {
   padding: 0;
 }
 
-.heading-compose i {
+.heading-groups i {
   text-align: center;
   padding: 5px;
   color: #93918f;
   cursor: pointer;
 }
 
-.heading-dot {
+.heading-close {
   padding: 0;
   margin-left: 10px;
 }
 
-.heading-dot i {
+.heading-close i {
+  text-align: right;
+  padding: 5px;
+  color: #93918f;
+  cursor: pointer;
+}
+
+.heading-reduce {
+  padding: 0;
+  margin-left: 10px;
+}
+
+.heading-reduce i {
   text-align: right;
   padding: 5px;
   color: #93918f;
@@ -255,6 +267,18 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 }
 
 #users {
+  height: 100%;
+}
+
+#groups ul.list {
+  padding:0px;
+}
+
+#groups li.list-inline {
+  margin-left: 0px;
+}
+
+#groups {
   height: 100%;
 }
 
@@ -576,21 +600,21 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
     width: 50px;
   }
 
-  .heading-compose {
+  .heading-groups {
     padding: 5px !important;
   }
 
-  .heading-compose i {
+  .heading-groups i {
     color: #fff;
     cursor: pointer;
   }
 
-  .heading-dot {
+  .heading-close {
     padding: 5px !important;
     margin-left: 10px !important;
   }
 
-  .heading-dot i {
+  .heading-close i {
     color: #fff;
     cursor: pointer;
   }

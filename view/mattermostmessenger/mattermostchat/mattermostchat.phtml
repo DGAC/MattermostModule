@@ -9,11 +9,11 @@
                             <!--<img src="">-->
                         </div>
                     </div>
-                    <div class="col-sm-1 col-xs-1  heading-dot  pull-right">
-                        <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
+                    <div class="col-sm-1 col-xs-1 heading-close  pull-right">
+                        <i class="fa fa-times fa-2x pull-right" title="Fermer le panneau" aria-hidden="true"></i>
                     </div>
-                    <div class="col-sm-2 col-xs-2 heading-compose  pull-right">
-                        <i class="fa fa-comments fa-2x  pull-right" aria-hidden="true"></i>
+                    <div class="col-sm-2 col-xs-2 heading-groups  pull-right">
+                        <i class="fa fa-comments fa-2x  pull-right" aria-hidden="true" title="Voir mes groupes"></i>
                     </div>
                 </div>
 
@@ -34,6 +34,7 @@
             </div>
 
             <div class="side-two">
+
                 <div class="row groups-heading">
                     <div class="row groups-main">
                         <div class="col-sm-2 col-xs-2 groups-back">
@@ -44,19 +45,20 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="row composeBox">
-                    <div class="col-sm-12 composeBox-inner">
-                        <div class="form-group has-feedback">
-                            <input id="composeText" type="text" class="form-control" name="searchText" placeholder="Rechercher mes groupes">
-                            <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                <div id="groups">
+                    <div class="row composeBox">
+                        <div class="col-sm-12 composeBox-inner">
+                            <div class="form-group has-feedback">
+                                <input id="filterGroup" type="text" class="form-control search" name="searchText" placeholder="Filtrer mes groupes">
+                                <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="row compose-sideBar load">
+                    <div class="row compose-sideBar load">
+                        <ul class="list"></ul>
 
-
+                    </div>
                 </div>
             </div>
         </div>
@@ -64,11 +66,11 @@
         <div class="col-sm-8 conversation">
             <div class="row heading">
                 <div class="col-sm-7 col-xs-6 heading-name">
-                    <a class="heading-name-meta" href="#"><i class="fa fa-users fa-2x"></i> <span class="channel-name">Channel Name</span>
+                    <a class="heading-name-meta" href="#" title="Liste des participants">
+                        <i class="fa fa-users fa-2x"></i> <span class="channel-name">Channel Name</span>
                     </a>
-                    <span class="heading-online">Online</span>
                 </div>
-                <div class="col-sm-2 col-xs-2  heading-dot pull-right">
+                <div class="col-sm-2 col-xs-2  heading-reduce pull-right">
                     <!--<i class="fa fa-window-close pull-right" aria-hidden="true"></i>-->
                     <i id="reduce-chat" class="fa fa-window-minimize pull-right" aria-hidden="true"></i>
                 </div>
@@ -84,8 +86,6 @@
                 </div>
 
             </div>
-
-
 
             <div class="row reply">
                 <div class="col-sm-1 col-xs-1 reply-emojis">
