@@ -36,17 +36,28 @@
          *
          * @memberOf $
          */
-        version: "0.0.3",
+        version: "0.0.4",
 
         //default options
         options: {
             baseUrl: "",
             userName: "",
             teamName: "",
-            channelId: ""
+            channelId: "",
+            token: "",
+            serverUrl:""
         },
         currentChannelId: "",
         currentChannelName: "",
+        /**
+         * Websocket connection
+         */
+        conn: null,
+        connFailCount: 0,
+        //timer
+        timer: null,
+        //lastupdate in UNIX timestamp
+        lastupdate: 0,
         //Initialize the timeline
         _create: function () {
             var self = this;
@@ -174,11 +185,8 @@
             //add loaders
             $(document)
                 .ajaxSend(function(event, jqxhr, settings){
-                    if(settings.url.indexOf('getLastPosts') > -1) {
+                    if(settings.url.indexOf('getLastPosts') > -1 && settings.url.indexOf('lastupdate') == -1) {
                         $('#conversation').addClass('load');
-                    }
-                    if(settings.url.indexOf('sendMessage') > -1) {
-                        $("#comment").addClass('reply-loader');
                     }
                     if(settings.url.indexOf('getChannelMembers') > -1) {
                         $(".sideBar").addClass('load');
@@ -186,9 +194,12 @@
                     if(settings.url.indexOf('getMyChannels') > -1) {
                         $(".compose-sideBar").addClass('load');
                     }
+                    if(settings.url.indexOf('sendMessage') > -1) {
+                        $("#comment").addClass('reply-loader');
+                    }
                 })
                 .ajaxComplete(function(event, jqxhr, settings){
-                    if(settings.url.indexOf('getLastPosts') > -1) {
+                    if(settings.url.indexOf('getLastPosts') > -1 && settings.url.indexOf('lastupdate') == -1) {
                         $('#conversation').removeClass('load');
                     }
                     if(settings.url.indexOf('getChannelMembers') > -1) {
@@ -209,6 +220,28 @@
                             });
                     }
                 });
+
+            //create websocket connection
+            /*self.conn = new WebSocket("ws://"+self.options.serverUrl+'/api/v4/websocket');
+            self.conn.onopen = function(event){
+                var message = {
+                    "seq": 1,
+                    "action": "authentication_challenge",
+                    "data": {
+                        "token": self.options.token
+                    }
+                };
+                self.conn.send(JSON.stringify(message));
+            };
+            self.conn.onerror = function(event){
+                self.connFailCount = 1;
+                console.log("impossible de se connecter au websocket");
+                console.log(event);
+            };
+            self.conn.onmessage = function(event) {
+              console.log('message reçu');
+              console.log(event);
+            };*/
         },
 
         /* Public methods */
@@ -219,14 +252,23 @@
             this.element.find('.sideBar ul').empty();
             this.element.find('.message-previous').nextAll().remove();
             this.element.find('.channel-name').text(channelName);
+            //stop previous refresh
+            if(self.timer !== null) {
+                clearInterval(self.timer);
+            }
             self.currentChannelId = channelId;
             $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId, function(data){
                 self._addPosts(data);
+                //periodic refresh
+                self.lastupdate = Date.now();
+                self.timer = setInterval(function(){self._refresh()}, 10000);
             });
             //fetch members
             $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getChannelMembers?channelid='+self.currentChannelId, function(data){
                 self._addUsers(data);
             });
+
+
         },
         /* Private Methods */
         _addPosts: function(data) {
@@ -246,10 +288,16 @@
             container.scrollTop(container[0].scrollHeight);
         },
         _addPost : function(data) {
-            if(this.options.userName.localeCompare(data.username) == 0) {
-                this._addMyPost(data);
-            } else {
-                this._addOtherPost(data);
+            var messages = $('.message-body').filter(function(){
+                return ($(this).data('id').localeCompare(data.id) == 0);
+            });
+            if(messages.length == 0){
+                //no message with same id -> insert
+                if(this.options.userName.localeCompare(data.username) == 0) {
+                    this._addMyPost(data);
+                } else {
+                    this._addOtherPost(data);
+                }
             }
         },
         _addMyPost: function(data) {
@@ -317,7 +365,7 @@
             var values = [];
             for(var i in data){
                 var date = moment(data[i].lastviewedat);
-                var dateString = date.format("ddd h:mm");
+                var dateString = date.format("ddd D, h:mm");
                 var value = {
                     name: data[i].username,
                     lastseen: dateString,
@@ -381,10 +429,10 @@
             });
         },
         _refresh: function() {
-            var lastid = $(".message-body").last().data('id');
             var self = this;
-            $.getJSON(this.options.baseUrl+'/mattermost/mattermostchat/getLastPosts?lastid='+lastid+'&channelid='+self.currentChannelId, function(data){
+            $.getJSON(this.options.baseUrl+'/mattermost/mattermostchat/getLastPosts?lastupdate='+self.lastupdate+'&channelid='+self.currentChannelId, function(data){
                 self._addPosts(data);
+                self.lastupdate = Date.now();
             });
         },
         /** Utilitary methods */

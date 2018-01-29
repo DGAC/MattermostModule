@@ -61,10 +61,13 @@ class MattermostChatController extends AbstractActionController
         $json = array();
         $postid = $this->params()->fromQuery('lastid', null);
         $channelid = $this->params()->fromQuery('channelid', null);
-        if($postid == null) {
+        $since = $this->params()->fromQuery('lastupdate', null);
+        if($postid == null && $since == null) {
             $posts = $this->mattermost->getLastPostsFromChannel($channelid);
-        } else {
+        } else if($postid !== null) {
             $posts = $this->mattermost->getLastPostsFromChannelAfter($channelid, $postid);
+        } else if($since !== null) {
+            $posts = $this->mattermost->getLastPostsFromChannelSince($channelid, $since);
         }
         foreach ($posts->order as $key => $value) {
             $json[$value]['order'] = $key;

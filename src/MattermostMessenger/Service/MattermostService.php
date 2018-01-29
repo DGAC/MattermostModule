@@ -34,6 +34,8 @@ class MattermostService
 
     private $myId;
 
+    private $token;
+
     public function __construct($config)
     {
         $this->mattermost = $config['mattermost'];
@@ -63,13 +65,20 @@ class MattermostService
             if($result->getStatusCode() == 200) {
                 //OK !
                 $this->myId = json_decode($result->getBody())->id;
-                error_log($this->myId);
+                $this->token = $result->getHeader('Token')[0];
             } else {
                 //TODO throw something or retry ?
                 error_log("Impossible de s'authentifier au serveur, erreur ".$result->getStatusCode());
             }
         }
         return $this->client;
+    }
+
+    public function getToken(){
+        if(!$this->token){
+            $this->getClient();
+        }
+        return $this->token;
     }
 
     /**
@@ -103,6 +112,19 @@ class MattermostService
             return json_decode($result->getBody());
         } else {
             throw new \Exception("Impossible de récupérer les posts. Erreur ".$result->getStatusCode()." : ".$result->getBody());
+        }
+    }
+
+    public function getLastPostsFromChannelSince($channelId, $time)
+    {
+        $requestOptions = array(
+            'since' => $time
+        );
+        $result = $this->getClient()->getPostModel()->getPostsForChannel($channelId, $requestOptions);
+        if($result->getStatusCode() == 200) {
+            return json_decode($result->getBody());
+        } else {
+            throw new \Exception("Impossible de récupérer les posts. Erreur ".$result->getStatusCode());
         }
     }
 

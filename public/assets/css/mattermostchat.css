@@ -90,6 +90,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   z-index: 1000;
 }
 
+.heading-users {
+  padding: 10px;
+  font-weight: bold;
+  color: #93918f;
+  font-size: larger;
+}
+
 .heading-avatar {
   padding: 0;
   cursor: pointer;
@@ -292,7 +299,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 }
 
 .sideBar-time {
-  padding: 10px !important;
+  padding: 10px 0px 0px 0px !important;
 }
 
 .time-meta {
