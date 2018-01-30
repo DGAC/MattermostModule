@@ -6,10 +6,50 @@
 
 ```composer require brunospy/mattermostmodule```
 
-## Usage
+## Configuration
 
 * Add module in your application modules
-* Add javascript dependencies :
-  * Moment.js
-  * list.min.js
-* Use view helper
+
+* Use ```mattermostmessenger.local.php.dist``` to add your configuration
+
+## Usage
+
+* Add CSS files to your view. Example : 
+
+```php
+echo $this->headLink()
+              ->appendStylesheet($this->basePath() . '/<path to your bootstrap>/bootstrap.min.css')
+              ->appendStylesheet($this->basePath() . '/assets/css/font-awesome.min.css')
+              ->appendStylesheet($this->basePath() . '/assets/css/mattermostchat.css');
+
+```
+
+* Add javascript dependencies. Example :
+```php
+echo $this->headScript()
+    ->appendFile($this->basePath() . '/<path to your jquery>/jquery.min.js')
+    ->appendFile($this->basePath() . '/<path to your jquery-ui>/jquery-ui.min.js')
+    ->appendFile($this->basePath() . '/<path to your bootstrap>/bootstrap.min.js')
+    ->appendFile($this->basePath() . '/<path to your momentjs>/moment.min.js')
+    ->appendFile($this->basePath() . '/<path to your list.js>/list.min.js')
+    ->appendFile($this->basePath() . '/assets/js/mattermostchat.js');
+```
+ 
+* Use view helper :
+```html
+<div class="chat-container">
+    <?php echo $this->mattermost();?>
+</div>
+```
+
+* And finally configure the Jquery UI Widget :
+```javascript
+$('.chat-container').mattermost({
+            baseUrl: '<?php echo $this->basePath(); ?>',
+            userName: '<?php echo $this->mattermost['login'];?>',
+            teamName: '<?php echo $this->mattermost['team_id'];?>',
+            channelId: '<?php echo $this->mattermost['defaultchannelid'];?>',
+            token: '<?php echo $this->mattermost['token'];?>',
+            serverUrl: '<?php echo $this->mattermost['server_url'];?>'
+        });
+```

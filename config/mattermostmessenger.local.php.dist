@@ -1,7 +1,7 @@
 <?php
 return array(
     'mattermost' => array(
-        'server_url' => 'URL of the server',
+        'server_url' => 'URL of the server WITHOUT https://',
         'login' => 'login used to connect to the server',
         'password' => 'well, the password of the aforementioned user',
         'team_id' => 'Name of the team to use',
