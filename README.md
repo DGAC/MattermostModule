@@ -14,7 +14,12 @@
 
 ## Usage
 
-* Add CSS files to your view. Example : 
+* Add CSS files to your view. 
+
+  - Bootstrap 3
+  - Font Awesome 4 
+
+Example : 
 
 ```php
 echo $this->headLink()
@@ -24,7 +29,17 @@ echo $this->headLink()
 
 ```
 
-* Add javascript dependencies. Example :
+* Add javascript dependencies. 
+
+  - JQuery
+  - JQuery-UI
+  - Bootstrap 3
+  - Moment.js : http://momentjs.com/
+  - List.js : http://listjs.com/
+  - Marked : https://github.com/chjj/marked
+
+Example :
+
 ```php
 echo $this->headScript()
     ->appendFile($this->basePath() . '/<path to your jquery>/jquery.min.js')
@@ -32,6 +47,7 @@ echo $this->headScript()
     ->appendFile($this->basePath() . '/<path to your bootstrap>/bootstrap.min.js')
     ->appendFile($this->basePath() . '/<path to your momentjs>/moment.min.js')
     ->appendFile($this->basePath() . '/<path to your list.js>/list.min.js')
+    ->appendFile($this->basePath() . '/<path to your marked.js>/marked.min.js')
     ->appendFile($this->basePath() . '/assets/js/mattermostchat.js');
 ```
  
