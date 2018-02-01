@@ -495,6 +495,44 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   word-wrap: break-word;
 }
 
+.user-status {
+  position: absolute;
+  right: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.user-online {
+  margin: -4px 0 0 -2px;
+  background-color: green;
+  color: white;
+  font-size: xx-small;
+  padding-top: 1px;
+}
+
+.user-offline {
+  margin: -2px 0 0 -2px;
+  border: 2px solid green;
+  color: transparent;
+  font-size: xx-small;
+  padding-top: 1px;
+}
+
+.user-away {
+  margin: -4px 0 0 -2px;
+  color: orangered;
+  vertical-align: middle;
+}
+
+.user-dnd {
+  margin: -4px 0 0 -2px;
+  background-color: red;
+  color: white;
+  font-size: x-small;
+  vertical-align: middle;
+  padding-top: 1px;
+}
 
 /*Reply*/
 

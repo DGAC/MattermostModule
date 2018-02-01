@@ -51,11 +51,6 @@ class MattermostChatController extends AbstractActionController
         return new JsonModel($json);
     }
 
-    public function getPostAction()
-    {
-
-    }
-
     public function getLastPostsAction()
     {
         $json = array();
@@ -73,10 +68,10 @@ class MattermostChatController extends AbstractActionController
             $json[$value]['order'] = $key;
         }
         foreach ($posts->posts as $key => $value) {
-            $json[$key]['userid'] = $value->user_id;
-            $json[$key]['username'] = $this->mattermost->getUsername($value->user_id);
+            $json[$key]['user_id'] = $value->user_id;
+            $json[$key]['sender_name'] = $this->mattermost->getUsername($value->user_id);
             $json[$key]['message'] = $this->markdownService->render(str_replace("\n", "\n\n", $value->message));
-            $json[$key]['lastupdate'] = $value->update_at;
+            $json[$key]['update_at'] = $value->update_at;
             $json[$key]['id'] = $key;
         }
         return new JsonModel($json);
@@ -86,15 +81,31 @@ class MattermostChatController extends AbstractActionController
     {
         $json = array();
         $channelid = $this->params()->fromQuery('channelid', null);
-        $members = $this->mattermost->getChannelMembers($channelid);
-        foreach ($members as $member) {
-            $m = array();
-            $m['username'] = $this->mattermost->getUsername($member->user_id);
-            $m['picture'] = $this->mattermost->getUserPicture($member->user_id);
-            $m['lastviewedat'] = $member->last_viewed_at;
-            $json[] = $m;
+        $page = 0;
+        $members = array();
+        while(count($members) == 60 || $page == 0) {
+            error_log(count($members) . ' ' . $page);
+            $members = $this->mattermost->getChannelMembers($channelid, $page);
+            $i = 0;
+            foreach ($members as $member) {
+                $m = array();
+                $m['id'] = $member->user_id;
+                $m['username'] = $this->mattermost->getUsername($member->user_id);
+                $m['picture'] = $this->mattermost->getUserPicture($member->user_id);
+                $m['lastviewedat'] = $member->last_viewed_at;
+                $json[] = $m;
+                if($i == 0) error_log($m['username']);
+                $i++;
+            }
+            $page++;
         }
         return new JsonModel($json);
+    }
+
+    public function getUserStatusAction()
+    {
+        $userId = $this->params()->fromQuery('userid', null);
+        return new JsonModel(array("status"=>$this->mattermost->getUserStatus($userId)));
     }
 
     public function getMyChannelsAction() {

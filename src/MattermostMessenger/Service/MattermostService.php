@@ -179,20 +179,20 @@ class MattermostService
         }
     }
 
-    public function getChannelMembers($channelId)
+    public function getChannelMembers($channelId, $page = 0)
     {
-        $result = $this->getClient()->getChannelModel()->getChannelMembers($channelId);
+        $result = $this->getClient()->getChannelModel()->getChannelMembers($channelId, $page);
         if($result->getStatusCode() == 200) {
             return json_decode($result->getBody());
         } else {
-            throw new \Exception("Impossible de récupérer l'utilisateur.");
+            throw new \Exception("Impossible de récupérer les utilisateurs.");
         }
     }
 
-    public function getMyChannelsByTeamName($teamname)
+    public function getMyChannelsByTeamName($teamName)
     {
-        $teamid = $this->getTeamId($teamname);
-        return $this->getMyChannels($teamid);
+        $teamId = $this->getTeamId($teamName);
+        return $this->getMyChannels($teamId);
     }
 
     public function getMyChannels($teamid)
@@ -215,5 +215,24 @@ class MattermostService
         }
     }
 
+    public function getUserStatus($userid)
+    {
+        $result = $this->getClient()->getUserModel()->getUserStatus($userid);
+        if($result->getStatusCode() == 200) {
+            return json_decode($result->getBody())->status;
+        } else {
+            throw new \Exception("Impossible de récupérer le statut. Erreur ".$result->getStatusCode());
+        }
+    }
+
+    public function getUserStatusesById()
+    {
+        $result = $this->getClient()->getUserModel()->getUserStatusesById();
+        if($result->getStatusCode() == 200) {
+            return json_decode($result->getBody());
+        } else {
+            throw new \Exception("Impossible de récupérer les statuts. Erreur ".$result->getStatusCode());
+        }
+    }
 }
 

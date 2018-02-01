@@ -58,6 +58,10 @@
         timer: null,
         //lastupdate in UNIX timestamp
         lastupdate: 0,
+        /**
+         * True if scroll by user
+         */
+        userScroll: false,
         //Initialize the timeline
         _create: function () {
             var self = this;
@@ -165,6 +169,16 @@
                 }
             });
 
+            //detect scroll
+            this.element.find('#conversation').scroll(function(event){
+                var container = self.element.find('#conversation')[0];
+                if (container.scrollHeight - container.scrollTop === container.clientHeight) {
+                    self.userScroll = false;
+                } else {
+                    self.userScroll = true;
+                }
+            });
+
             //initialize chat
             $.when(
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getDefaultChannelId?teamid=' + self.options.teamName, function (data) {
@@ -177,8 +191,8 @@
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getchannelname?channelid='+self.currentChannelId, function(data){
                     self.element.find('span.channel-name').text(data.channelname);
                     self.currentChannelName = data.channelname;
+                    self.changeChannel(self.currentChannelId, self.currentChannelName);
                 });
-                self.changeChannel(self.currentChannelId, self.currentChannelName);
             });
 
 
@@ -213,7 +227,9 @@
                         jqxhr
                             .done(function(){
                                 $("#comment").val('');
-                                self._refresh();
+                                if(self.connFailCount !== 0) { //no websocket : force refresh
+                                    self._refresh();
+                                }
                             })
                             .fail(function(){
                                 //TODO add alert
@@ -222,7 +238,7 @@
                 });
 
             //create websocket connection
-            /*self.conn = new WebSocket("ws://"+self.options.serverUrl+'/api/v4/websocket');
+            self.conn = new WebSocket("wss://"+self.options.serverUrl+'/api/v4/websocket');
             self.conn.onopen = function(event){
                 var message = {
                     "seq": 1,
@@ -235,38 +251,64 @@
             };
             self.conn.onerror = function(event){
                 self.connFailCount = 1;
-                console.log("impossible de se connecter au websocket");
-                console.log(event);
+                //connect to websocket fail -> fallback to long poll
+                self.lastupdate = Date.now();
+                self.timer = setInterval(function () {
+                    self._refresh()
+                }, 10000);
             };
             self.conn.onmessage = function(event) {
-              console.log('message reçu');
-              console.log(event);
-            };*/
+                console.log(event);
+                var msg = JSON.parse(event.data);
+                console.log(msg);
+                switch (msg.event) {
+                    case "posted":
+                        var post = JSON.parse(msg.data.post);
+                        post['sender_name'] = msg.data.sender_name;
+                        post['message'] = marked(post['message']); //render markdown
+                        if(post.channel_id.localeCompare(self.currentChannelId) == 0) {
+                            self._addPost(post);
+                        }
+                        break;
+                }
+            };
         },
 
         /* Public methods */
-
+        minimize : function() {
+            this.element.find('#reduce-chat').trigger('click');
+        },
         changeChannel : function(channelId, channelName) {
             var self = this;
+            //stop previous refresh
+            if(self.timer !== null && self.connFailCount == 0) {
+                clearInterval(self.timer);
+            }
             //empty sideBar and conversation
             this.element.find('.sideBar ul').empty();
             this.element.find('.message-previous').nextAll().remove();
             this.element.find('.channel-name').text(channelName);
-            //stop previous refresh
-            if(self.timer !== null) {
-                clearInterval(self.timer);
-            }
             self.currentChannelId = channelId;
             $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId, function(data){
                 self._addPosts(data);
-                //periodic refresh
-                self.lastupdate = Date.now();
-                self.timer = setInterval(function(){self._refresh()}, 10000);
+                if(self.connFailCount !== 0) { //no websocket : start polling
+                    //periodic refresh
+                    self.lastupdate = Date.now();
+                    self.timer = setInterval(function () {
+                        self._refresh()
+                    }, 10000);
+                }
             });
             //fetch members
-            $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getChannelMembers?channelid='+self.currentChannelId, function(data){
-                self._addUsers(data);
-            });
+            $.when(
+                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getChannelMembers?channelid='+self.currentChannelId, function(data){
+                    self._addUsers(data);
+                })
+            ).then(
+                function(){
+                    self._updateStatuses();
+                }
+            );
 
 
         },
@@ -283,9 +325,6 @@
             for (var i = 0; i < numberPosts; i++) {
                 this._addPost(posts[i]);
             }
-            var container = this.element.find('#conversation');
-            //go to the last message
-            container.scrollTop(container[0].scrollHeight);
         },
         _addPost : function(data) {
             var messages = $('.message-body').filter(function(){
@@ -293,15 +332,16 @@
             });
             if(messages.length == 0){
                 //no message with same id -> insert
-                if(this.options.userName.localeCompare(data.username) == 0) {
+                if(this.options.userName.localeCompare(data.sender_name) == 0) {
                     this._addMyPost(data);
                 } else {
                     this._addOtherPost(data);
                 }
             }
+            this._scrollToBottom();
         },
         _addMyPost: function(data) {
-            var date = moment(data.lastupdate);
+            var date = moment(data.update_at);
             var dateString = date.format("ddd h:mm");
             var post = $('<div class="row message-body"  data-id="'+data.id+'">' +
                 '<div class="col-sm-12 message-main-receiver">' +
@@ -318,7 +358,7 @@
             $("#conversation").append(post);
         },
         _addOtherPost: function(data) {
-            var date = moment(data.lastupdate);
+            var date = moment(data.update_at);
             var dateString = date.format("ddd h:mm");
             var post = $('<div class="row message-body" data-id="'+data.id+'">' +
                 '<div class="col-sm-12 message-main-sender">' +
@@ -327,7 +367,7 @@
                 data.message +
                 '</div>' +
                 '<span class="message-time pull-right">' +
-                data.username + ', ' + dateString+
+                data.sender_name + ', ' + dateString+
                 '</span>' +
                 '</div>' +
                 '</div>' +
@@ -340,10 +380,12 @@
                 valueNames: [
                     'name',
                     'lastseen',
-                    'initials'
+                    'initials',
+                    {data: ['id']},
                 ],
-                item: '<li class="list-inline"><div class="row sideBar-body">'+
+                item: '<li class="list-inline user"><div class="row sideBar-body">'+
                 '<div class="col-sm-3 col-xs-3 sideBar-avatar">'+
+                '<span class="fa user-status"></span>'+
                 '<div class="heading-avatar-circle">'+
                 '<span class="heading-avatar-initials initials"></span>' +
                 '</div>'+
@@ -367,6 +409,7 @@
                 var date = moment(data[i].lastviewedat);
                 var dateString = date.format("ddd D, h:mm");
                 var value = {
+                    id: data[i].id,
                     name: data[i].username,
                     lastseen: dateString,
                     initials: data[i].username.charAt(0).toUpperCase()
@@ -380,6 +423,35 @@
                 $(this).css('background-color', color);
                 $(this).find('.heading-avatar-initials').css('color', textColor);
             });
+        },
+        _updateStatuses: function(){
+            var self = this;
+            $('.user').each(function(index){
+                var me = $(this);
+                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getUserStatus?userid='+$(this).data('id'), function(data){
+                    self._changeStatus(me.find('.user-status'), data.status);
+                });
+            });
+        },
+        _changeStatus: function(element, status){
+            console.log(element);
+            console.log(status);
+            element.removeClass("user-online user-away user-offline user-dnd fa-check fa-clock-o fa-minus");
+            switch (status){
+                case "online":
+                    console.log('add online');
+                    element.addClass("fa-check user-online");
+                    break;
+                case "away":
+                    element.addClass("fa-clock-o user-away");
+                    break;
+                case "offline":
+                    element.addClass("user-offline");
+                    break;
+                case "dnd":
+                    element.addClass("fa-minus user-dnd");
+                    break;
+            }
         },
         _addGroups: function(data) {
             var self = this;
@@ -472,5 +544,12 @@
             }
             return [r, g, b];
         },
+        _scrollToBottom: function() {
+            var container = this.element.find('#conversation');
+            if (!this.userScroll) {
+                //go to the last message only if no user scroll
+                container.scrollTop(container[0].scrollHeight);
+            }
+        }
     });
 })(jQuery);
