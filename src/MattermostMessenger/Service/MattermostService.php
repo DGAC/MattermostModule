@@ -181,7 +181,8 @@ class MattermostService
 
     public function getChannelMembers($channelId, $page = 0)
     {
-        $result = $this->getClient()->getChannelModel()->getChannelMembers($channelId, $page);
+        $requestOptions = array('page' => $page);
+        $result = $this->getClient()->getChannelModel()->getChannelMembers($channelId, $requestOptions);
         if($result->getStatusCode() == 200) {
             return json_decode($result->getBody());
         } else {
