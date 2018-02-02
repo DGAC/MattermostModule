@@ -36,7 +36,7 @@
          *
          * @memberOf $
          */
-        version: "0.0.4",
+        version: "0.0.9",
 
         //default options
         options: {
@@ -62,7 +62,9 @@
          * True if scroll by user
          */
         userScroll: false,
-        //Initialize the timeline
+        sequence: 1,
+        responseCallbacks: [],
+        //Initialize the widget
         _create: function () {
             var self = this;
             //register events
@@ -240,14 +242,7 @@
             //create websocket connection
             self.conn = new WebSocket("wss://"+self.options.serverUrl+'/api/v4/websocket');
             self.conn.onopen = function(event){
-                var message = {
-                    "seq": 1,
-                    "action": "authentication_challenge",
-                    "data": {
-                        "token": self.options.token
-                    }
-                };
-                self.conn.send(JSON.stringify(message));
+                self._sendWebsocketMessage("authentication_challenge",{"token": self.options.token}, null);
             };
             self.conn.onerror = function(event){
                 self.connFailCount = 1;
@@ -260,16 +255,27 @@
             self.conn.onmessage = function(event) {
                 console.log(event);
                 var msg = JSON.parse(event.data);
-                console.log(msg);
-                switch (msg.event) {
-                    case "posted":
-                        var post = JSON.parse(msg.data.post);
-                        post['sender_name'] = msg.data.sender_name;
-                        post['message'] = marked(post['message']); //render markdown
-                        if(post.channel_id.localeCompare(self.currentChannelId) == 0) {
-                            self._addPost(post);
-                        }
-                        break;
+                if(msg.seq_reply) {
+                    if(self.responseCallbacks[msg.seq_reply]) {
+                        self.responseCallbacks[msg.seq_reply](msg);
+                        delete self.responseCallbacks[msg.seq_reply];
+                    }
+                } else {
+                    switch (msg.event) {
+                        case "posted":
+                            var post = JSON.parse(msg.data.post);
+                            post['sender_name'] = msg.data.sender_name;
+                            post['message'] = marked(post['message']); //render markdown
+                            if (post.channel_id.localeCompare(self.currentChannelId) == 0) {
+                                self._addPost(post);
+                            }
+                            break;
+                        case "status_change":
+                            var userId = msg.data.user_id;
+                            var status = msg.data.status;
+                            self._changeStatusByUserId(userId, status);
+                            break;
+                    }
                 }
             };
         },
@@ -306,7 +312,11 @@
                 })
             ).then(
                 function(){
-                    self._updateStatuses();
+                    if(self.connFailCount > 0) {
+                        self._updateStatuses();
+                    } else {
+                        self._sendGetStatuses();
+                    }
                 }
             );
 
@@ -317,7 +327,11 @@
             var posts = [];
             for(var i in data)
             {
-                posts.push(data[i]);
+                var post = data[i];
+                if(post.order !== undefined ) {
+                    //TODO childs posts out of view have no order
+                    posts.push(data[i]);
+                }
             }
             posts.sort(function(a,b){return b.order - a.order});
             var numberPosts = posts.length;
@@ -385,7 +399,7 @@
                 ],
                 item: '<li class="list-inline user"><div class="row sideBar-body">'+
                 '<div class="col-sm-3 col-xs-3 sideBar-avatar">'+
-                '<span class="fa user-status"></span>'+
+                '<span class="fa user-status user-offline"></span>'+
                 '<div class="heading-avatar-circle">'+
                 '<span class="heading-avatar-initials initials"></span>' +
                 '</div>'+
@@ -424,6 +438,11 @@
                 $(this).find('.heading-avatar-initials').css('color', textColor);
             });
         },
+        /**
+         * Update statuses via polling
+         * Fall back in case websockets are not available
+         * @private
+         */
         _updateStatuses: function(){
             var self = this;
             $('.user').each(function(index){
@@ -433,13 +452,19 @@
                 });
             });
         },
+        _changeStatuses: function(data) {
+            for(var i in data.data) {
+                this._changeStatusByUserId(i, data.data[i]);
+            }
+        },
+        _changeStatusByUserId: function(userId, status) {
+            var element = this.element.find('.user[data-id="'+userId+'"] .user-status');
+            this._changeStatus(element, status);
+        },
         _changeStatus: function(element, status){
-            console.log(element);
-            console.log(status);
             element.removeClass("user-online user-away user-offline user-dnd fa-check fa-clock-o fa-minus");
             switch (status){
                 case "online":
-                    console.log('add online');
                     element.addClass("fa-check user-online");
                     break;
                 case "away":
@@ -506,6 +531,24 @@
                 self._addPosts(data);
                 self.lastupdate = Date.now();
             });
+        },
+        /** Web socket management **/
+        _sendWebsocketMessage: function(action, data, callback) {
+            var msg = {
+                "action": action,
+                "seq": this.sequence++,
+                "data": data
+            };
+            if(callback) {
+                this.responseCallbacks[msg.seq] = callback;
+            }
+            if (this.conn && this.conn.readyState === WebSocket.OPEN) {
+                this.conn.send(JSON.stringify(msg));
+            }
+        },
+        _sendGetStatuses: function() {
+            var self = this;
+            this._sendWebsocketMessage("get_statuses", null, function(data){self._changeStatuses(data)});
         },
         /** Utilitary methods */
         _yiq: function(rgb) {

@@ -84,7 +84,6 @@ class MattermostChatController extends AbstractActionController
         $page = 0;
         $members = array();
         while(count($members) == 60 || $page == 0) {
-            error_log(count($members) . ' ' . $page);
             $members = $this->mattermost->getChannelMembers($channelid, $page);
             $i = 0;
             foreach ($members as $member) {
@@ -94,7 +93,6 @@ class MattermostChatController extends AbstractActionController
                 $m['picture'] = $this->mattermost->getUserPicture($member->user_id);
                 $m['lastviewedat'] = $member->last_viewed_at;
                 $json[] = $m;
-                if($i == 0) error_log($m['username']);
                 $i++;
             }
             $page++;
