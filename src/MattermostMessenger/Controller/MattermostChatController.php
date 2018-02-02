@@ -136,4 +136,41 @@ class MattermostChatController extends AbstractActionController
         $json['channelname'] = $channelname;
         return new JsonModel($json);
     }
+
+    public function ackAction()
+    {
+        $json = array();
+        $postId = $this->params()->fromQuery('postid', null);
+        $response = $this->mattermost->saveReaction($postId, 'ok');
+        $json['result'] = $response;
+        return new JsonModel($json);
+    }
+
+    public function getReactionsAction()
+    {
+        $json = array();
+        $postId = $this->params()->fromQuery('postid', null);
+        $response = $this->mattermost->getReactions($postId);
+        foreach ($response as $reaction) {
+            $r = array();
+            $r['user_id'] = $reaction['user_id'];
+            $r['post_id'] = $reaction['post_id'];
+            $r['emoji_name'] = $reaction['emoji_name'];
+            $json[] = $r;
+        }
+        return new JsonModel($json);
+    }
+
+    public function isAckAction()
+    {
+        $json = array();
+        $postId = $this->params()->fromQuery('postid', null);
+        $myReactions = $this->mattermost->getMyReactions($postId);
+        $ok = array_filter($myReactions, function($v){
+            return strcmp($v['emoji_name'], 'ok') == 0;
+        });
+        $json['ack'] = count($ok) == 1;
+        return new JsonModel($json);
+    }
+
 }

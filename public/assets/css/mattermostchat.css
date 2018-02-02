@@ -447,7 +447,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   padding: 3px 20px !important;
   margin-left: 40% !important;
   max-width: 60%;
-    margin-bottom: 5px;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: row-reverse;
 }
 
 .message-text {
@@ -484,7 +486,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 }
 
 .sender {
-  float: right;
   width: auto !important;
   background: #dcf8c6;
   border-radius: 10px 10px 0 10px;
@@ -493,6 +494,19 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
   display: inline-block;
   word-wrap: break-word;
+}
+
+.ack {
+  display: none;
+  align-self: center;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.ack-sent {
+  cursor: not-allowed;
+  color: grey;
+  pointer-events: none;
 }
 
 .user-status {

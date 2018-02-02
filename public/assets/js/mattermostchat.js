@@ -24,6 +24,10 @@
  *      channelId: "[optional] default channelId",
  *      teamName : "Name of the team"
  *      userName: "Login to use"
+ *      token: "Authentication token, mandatory to activate websockets
+ *      serverUrl : "the url of the webserver, without protocol",
+ *      minimized : "Starts minimized, default : false",
+ *      acknowledgement: "Add button to acknowledge a message, default : false"
  * });
  *
  * @author Bruno Spyckerelle
@@ -45,7 +49,9 @@
             teamName: "",
             channelId: "",
             token: "",
-            serverUrl:""
+            serverUrl:"",
+            minimized: false,
+            acknowledgement: false
         },
         currentChannelId: "",
         currentChannelName: "",
@@ -67,6 +73,7 @@
         //Initialize the widget
         _create: function () {
             var self = this;
+
             //register events
             this.element.on('click', '.heading-groups', function(){
                 $(".side-two").css({
@@ -102,6 +109,11 @@
                 }
             });
             this.element.find('.heading-name-meta').trigger('click');
+            if(this.options.minimized) {
+                self.element.find('.app').addClass('reduce');
+                self.element.find('.app-one').hide();
+                self.element.find('.chat-reduce').show();
+            }
 
             this.element.on('submit',' #send-form', function(e){
                 e.preventDefault();
@@ -180,6 +192,30 @@
                     self.userScroll = true;
                 }
             });
+
+            this.element.on('click', '.ack', function(event){
+                var postid = $(this).data('id');
+                var me = $(this);
+                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/ack?postid='+postid, function(data){
+                    if(self.connFailCount !== 0) {
+                        //if no websocket, we rely on status code to know if reaction correctly added
+                        if(data.result == 200) {
+                            me.addClass('ack-sent').find('span').removeClass('fa-check').addClass('fa-check-square-o');
+                        }
+                    }
+                });
+            });
+
+            if(this.options.acknowledgement) {
+                this.element.on({
+                    mouseenter: function () {
+                        $(this).find('.ack').show();
+                    },
+                    mouseleave: function () {
+                        $(this).find('.ack').hide();
+                    }
+                }, '.message-main-sender');
+            }
 
             //initialize chat
             $.when(
@@ -275,6 +311,16 @@
                             var status = msg.data.status;
                             self._changeStatusByUserId(userId, status);
                             break;
+                        case "reaction_added":
+                            if(self.options.acknowledgement) {
+                                var reaction = JSON.parse(msg.data.reaction);
+                                if(reaction.emoji_name.localeCompare("ok") == 0) {
+                                    self.element
+                                        .find('.ack[data-id="'+reaction.post_id+'"]').addClass('ack-sent')
+                                        .find('span').removeClass('fa-check').addClass('fa-check-square-o');
+                                }
+                            }
+                            break;
                     }
                 }
             };
@@ -341,6 +387,7 @@
             }
         },
         _addPost : function(data) {
+            var post = data;
             var messages = $('.message-body').filter(function(){
                 return ($(this).data('id').localeCompare(data.id) == 0);
             });
@@ -374,18 +421,28 @@
         _addOtherPost: function(data) {
             var date = moment(data.update_at);
             var dateString = date.format("ddd h:mm");
-            var post = $('<div class="row message-body" data-id="'+data.id+'">' +
+            var postid = data.id;
+            var post = $('<div class="row message-body" data-id="'+postid+'">' +
                 '<div class="col-sm-12 message-main-sender">' +
-                '<div class="sender">' +
-                '<div class="message-text">' +
-                data.message +
-                '</div>' +
-                '<span class="message-time pull-right">' +
-                data.sender_name + ', ' + dateString+
-                '</span>' +
-                '</div>' +
+                    '<div class="sender">' +
+                        '<div class="message-text">' +
+                        data.message +
+                        '</div>' +
+                        '<span class="message-time pull-right">' +
+                        data.sender_name + ', ' + dateString+
+                        '</span>' +
+                    '</div>' +
                 '</div>' +
                 '</div>');
+            if(this.options.acknowledgement == true) {
+                $.getJSON(this.options.baseUrl + '/mattermost/MattermostChat/isack?postid=' + postid, function (data) {
+                    if (data.ack == true) {
+                        post.find('.message-main-sender').append('<div class="ack ack-sent"><span class="fa fa-check-square-o"></span></div>');
+                    } else {
+                        post.find('.message-main-sender').append('<div class="ack" title="Accuser réception" data-id="'+postid+'"><span class="fa fa-check"></span></div>');
+                    }
+                });
+            }
             $("#conversation").append(post);
         },
         _addUsers: function(data){

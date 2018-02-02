@@ -81,6 +81,14 @@ class MattermostService
         return $this->token;
     }
 
+    public function getMyId()
+    {
+        if(!$this->myId){
+            $this->getClient();
+        }
+        return $this->myId;
+    }
+
     /**
      * @param $message
      * @param $channelId
@@ -233,6 +241,44 @@ class MattermostService
             return json_decode($result->getBody());
         } else {
             throw new \Exception("Impossible de récupérer les statuts. Erreur ".$result->getStatusCode());
+        }
+    }
+
+    public function saveReaction($postId, $emojiName)
+    {
+        $requestOptions = array(
+            'user_id' => $this->getMyId(),
+            'post_id' => $postId,
+            'emoji_name' => $emojiName
+        );
+        $result = $this->getClient()->getReactionModel()->saveReaction($requestOptions);
+        if($result->getStatusCode() !== 200) {
+            error_log(print_r(json_decode($result->getBody()), true));
+        }
+        return $result->getStatusCode();
+    }
+
+    public function getReactions($postId)
+    {
+        $result = $this->getClient()->getPostModel()->getReactions($postId);
+        if($result->getStatusCode() == 200) {
+            return json_decode($result->getBody());
+        } else {
+            error_log(print_r(json_decode($result->getBody()), true));
+        }
+    }
+
+    public function getMyReactions($postId)
+    {
+        $result = $this->getClient()->getPostModel()->getReactions($postId);
+        if($result->getStatusCode() == 200) {
+            $reactions = json_decode($result->getBody(), true);
+            $myReactions = array_filter($reactions, function($v){
+                return strcmp($v['user_id'], $this->getMyId()) == 0;
+            });
+            return $myReactions;
+        } else {
+            error_log(print_r(json_decode($result->getBody()), true));
         }
     }
 }
