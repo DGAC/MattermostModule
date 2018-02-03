@@ -149,6 +149,26 @@ class MattermostService
         }
     }
 
+    /**
+     * @param $channelId
+     * @param $postId
+     * @return mixed Last 15 posts before $postId
+     * @throws \Exception
+     */
+    public function getLastPostsFromChannelBefore($channelId, $postId)
+    {
+        $requestOptions = array(
+            'before' => $postId,
+            'per_page' => 15
+        );
+        $result = $this->getClient()->getPostModel()->getPostsForChannel($channelId, $requestOptions);
+        if($result->getStatusCode() == 200) {
+            return json_decode($result->getBody());
+        } else {
+            throw new \Exception("Impossible de récupérer les posts. Erreur ".$result->getStatusCode());
+        }
+    }
+
     public function getPost($id)
     {
         $result = $this->getClient()->getPostModel()->getPost($id);

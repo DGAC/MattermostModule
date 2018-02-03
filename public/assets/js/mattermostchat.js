@@ -40,7 +40,7 @@
          *
          * @memberOf $
          */
-        version: "0.0.9",
+        version: "0.1.0",
 
         //default options
         options: {
@@ -114,6 +114,12 @@
                 self.element.find('.app-one').hide();
                 self.element.find('.chat-reduce').show();
             }
+
+            this.element.on('click', '.user', function(e){
+                var me = $(this);
+                var textarea = self.element.find("#comment");
+                textarea.val(textarea.val()+' @'+me.data('name'));
+            });
 
             this.element.on('submit',' #send-form', function(e){
                 e.preventDefault();
@@ -206,6 +212,13 @@
                 });
             });
 
+            this.element.on('click', "#previousMessages", function(e){
+                var postid = self.element.find("#conversation .message-body").first().data('id');
+                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId+'&beforeid='+postid, function(data){
+                    self._addPosts(data, true);
+                });
+            });
+
             if(this.options.acknowledgement) {
                 this.element.on({
                     mouseenter: function () {
@@ -289,7 +302,7 @@
                 }, 10000);
             };
             self.conn.onmessage = function(event) {
-                console.log(event);
+                //console.log(event);
                 var msg = JSON.parse(event.data);
                 if(msg.seq_reply) {
                     if(self.responseCallbacks[msg.seq_reply]) {
@@ -369,7 +382,7 @@
 
         },
         /* Private Methods */
-        _addPosts: function(data) {
+        _addPosts: function(data, reverse) {
             var posts = [];
             for(var i in data)
             {
@@ -379,14 +392,18 @@
                     posts.push(data[i]);
                 }
             }
-            posts.sort(function(a,b){return b.order - a.order});
+            if(reverse === undefined){
+                posts.sort(function(a,b){return b.order - a.order});
+            } else {
+                posts.sort(function(a,b){return a.order - b.order});
+            }
             var numberPosts = posts.length;
             //insert each post
             for (var i = 0; i < numberPosts; i++) {
-                this._addPost(posts[i]);
+                this._addPost(posts[i], reverse);
             }
         },
-        _addPost : function(data) {
+        _addPost : function(data, reverse) {
             var post = data;
             var messages = $('.message-body').filter(function(){
                 return ($(this).data('id').localeCompare(data.id) == 0);
@@ -394,14 +411,14 @@
             if(messages.length == 0){
                 //no message with same id -> insert
                 if(this.options.userName.localeCompare(data.sender_name) == 0) {
-                    this._addMyPost(data);
+                    this._addMyPost(data, reverse);
                 } else {
-                    this._addOtherPost(data);
+                    this._addOtherPost(data, reverse);
                 }
             }
             this._scrollToBottom();
         },
-        _addMyPost: function(data) {
+        _addMyPost: function(data, reverse) {
             var date = moment(data.update_at);
             var dateString = date.format("ddd h:mm");
             var post = $('<div class="row message-body"  data-id="'+data.id+'">' +
@@ -416,9 +433,13 @@
                 '</div>' +
                 '</div>' +
                 '</div>');
-            $("#conversation").append(post);
+            if(reverse === undefined){
+                $("#conversation").append(post);
+            } else {
+                post.insertAfter('.message-previous');
+            }
         },
-        _addOtherPost: function(data) {
+        _addOtherPost: function(data, reverse) {
             var date = moment(data.update_at);
             var dateString = date.format("ddd h:mm");
             var postid = data.id;
@@ -443,16 +464,20 @@
                     }
                 });
             }
-            $("#conversation").append(post);
+            if(reverse === undefined) {
+                $("#conversation").append(post);
+            } else {
+                post.insertAfter('.message-previous');
+            }
         },
         _addUsers: function(data){
             var self = this;
             var options = {
                 valueNames: [
-                    'name',
+                    'fullname',
                     'lastseen',
                     'initials',
-                    {data: ['id']},
+                    {data: ['id', 'name']},
                 ],
                 item: '<li class="list-inline user"><div class="row sideBar-body">'+
                 '<div class="col-sm-3 col-xs-3 sideBar-avatar">'+
@@ -463,7 +488,7 @@
                 '</div>'+
                 '<div class="col-sm-9 col-xs-9 sideBar-main">'+
                 '<div class="row">'+
-                '<div class="col-sm-8 col-xs-8 sideBar-name name">'+
+                '<div class="col-sm-8 col-xs-8 sideBar-name fullname">'+
                 '<span class="name-meta">'+
                 '</span>'+
                 '</div>'+
@@ -481,6 +506,7 @@
                 var dateString = date.format("ddd D, h:mm");
                 var value = {
                     id: data[i].id,
+                    fullname: data[i].username,
                     name: data[i].username,
                     lastseen: dateString,
                     initials: data[i].username.charAt(0).toUpperCase()
