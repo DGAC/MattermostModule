@@ -28,20 +28,20 @@ use Pimple\Container;
 class MattermostService
 {
 
-    private $mattermost;
+    protected $mattermost;
 
-    private $client;
+    protected $client;
 
-    private $myId;
+    protected $myId;
 
-    private $token;
+    protected $token;
 
     public function __construct($config)
     {
         $this->mattermost = $config['mattermost'];
     }
 
-    private function getClient()
+    protected function getClient()
     {
         if($this->client == null) {
             $containerOptions = array(
