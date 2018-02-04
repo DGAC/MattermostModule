@@ -11,7 +11,7 @@
   }
 ],
   "require": {
-    "gnello/php-mattermost-driver": "dev-master",
+    "gnello/php-mattermost-driver": "^2.4",
     "zendframework/zend-mvc": "^2.7",
     "maglnet/magl-markdown": "~1.1"
   },

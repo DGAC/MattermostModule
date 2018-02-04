@@ -134,7 +134,6 @@
                     var messages = '({error: ["Impossible d\'enregistrer l\'organisation."]})';
                     displayMessages(eval(messages));
                 });
-
             });
 
             //on change chat
@@ -338,8 +337,10 @@
                 }
             };
         },
+        /* *************** */
+        /*  Public methods */
+        /* *************** */
 
-        /* Public methods */
         minimize : function() {
             this.element.find('#reduce-chat').trigger('click');
         },
@@ -378,10 +379,36 @@
                     }
                 }
             );
-
+        },
+        /**
+         *
+         * Send a message to the current channel
+         * @param message
+         */
+        sendMessage: function(message){
+            var post = {'comment': message};
+            $.post(this.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+this.currentChannelId, post, function(data){
+                    if(data['messages']){
+                        displayMessages(data.messages);
+                    }
+                    if(data['success']){
+                        console.log('test')
+                    }
+                }, 'json').fail(function(){
+                    var messages = '({error: ["Impossible d\'enregistrer l\'organisation."]})';
+                    displayMessages(eval(messages));
+                });
+        },
+        /**
+         * Change my status
+         * @param status "online" "offline" "away" or "dnd"
+         */
+        changeMyStatus: function(status){
 
         },
+        /* *************** */
         /* Private Methods */
+        /* *************** */
         _addPosts: function(data, reverse) {
             var posts = [];
             for(var i in data)
