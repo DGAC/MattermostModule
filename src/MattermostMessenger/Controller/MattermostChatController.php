@@ -70,12 +70,35 @@ class MattermostChatController extends AbstractActionController
         foreach ($posts->order as $key => $value) {
             $json[$value]['order'] = $key;
         }
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
         foreach ($posts->posts as $key => $value) {
             $json[$key]['user_id'] = $value->user_id;
             $json[$key]['sender_name'] = $this->mattermost->getUsername($value->user_id);
             $json[$key]['message'] = $this->markdownService->render(str_replace("\n", "\n\n", $value->message));
             $json[$key]['update_at'] = $value->update_at;
             $json[$key]['id'] = $key;
+            if(isset($value->file_ids)) {
+                $json[$key]['images'] = array();
+                foreach ($value->file_ids as $fileId) {
+                    if(!file_exists('./public/mattermost_files/img/thumbnails') && !is_dir('./public/mattermost/img/thumbnails')) {
+                        mkdir('./public/mattermost_files/img/thumbnails', 0700, true);
+                    }
+                    if(!file_exists('./public/mattermost_files/img/thumbnails/'.$fileId)){
+                        file_put_contents('./public/mattermost_files/img/thumbnails/'.$fileId, $this->mattermost->getFileThumbnail($fileId));
+                    }
+                    if(!file_exists('./public/mattermost_files/img/'.$fileId)){
+                        file_put_contents('./public/mattermost_files/img/'.$fileId, $this->mattermost->getFile($fileId));
+                    }
+                    if(strpos(finfo_file($finfo, './public/mattermost_files/img/'.$fileId), "image") !== false) {
+                        $file = array();
+                        $file['id'] = $fileId;
+                        $file['thumbnail'] = './mattermost_files/img/thumbnails/'.$fileId;
+                        $file['file'] = './mattermost_files/img/'.$fileId;
+                        $json[$key]['images'][] = $file;
+                    }
+
+                }
+            }
         }
         return new JsonModel($json);
     }

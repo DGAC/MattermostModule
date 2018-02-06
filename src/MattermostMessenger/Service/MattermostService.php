@@ -301,5 +301,27 @@ class MattermostService
             error_log(print_r(json_decode($result->getBody()), true));
         }
     }
+
+    public function getFileThumbnail($fileId)
+    {
+        $result = $this->getClient()->getFileModel()->getFilesThumbnail($fileId);
+        if($result->getStatusCode() == 200) {
+            return $result->getBody();
+        } else {
+            error_log('Erreur '.$result->getStatusCode());
+            error_log(print_r(json_decode($result->getBody()), true));
+        }
+    }
+
+    public function getFile($fileId)
+    {
+        $result = $this->getClient()->getFileModel()->getFile($fileId);
+        if($result->getStatusCode() == 200) {
+            return $result->getBody();
+        } else {
+            error_log('Erreur '.$result->getStatusCode());
+            error_log(print_r(json_decode($result->getBody()), true));
+        }
+    }
 }
 
