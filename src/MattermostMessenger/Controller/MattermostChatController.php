@@ -67,6 +67,10 @@ class MattermostChatController extends AbstractActionController
         } else if($beforeid !== null) {
             $posts = $this->mattermost->getLastPostsFromChannelBefore($channelid, $beforeid);
         }
+        if(count($posts->order) == 0) {
+            $this->getResponse()->setStatusCode(304);
+            return new JsonModel();
+        }
         foreach ($posts->order as $key => $value) {
             $json[$value]['order'] = $key;
         }
@@ -76,6 +80,7 @@ class MattermostChatController extends AbstractActionController
             $json[$key]['sender_name'] = $this->mattermost->getUsername($value->user_id);
             $json[$key]['message'] = $this->markdownService->render(str_replace("\n", "\n\n", $value->message));
             $json[$key]['update_at'] = $value->update_at;
+            $json[$key]['channel_id'] = $value->channel_id;
             $json[$key]['id'] = $key;
             if(isset($value->file_ids)) {
                 $json[$key]['images'] = array();

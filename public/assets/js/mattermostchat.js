@@ -71,18 +71,16 @@
         userScroll: false,
         sequence: 1,
         responseCallbacks: [],
+        //Array of my groups, used to monitor new messages
+        groupIds: [],
         //Initialize the widget
         _create: function () {
             var self = this;
 
             //register events
-            this.element.on('click', '.heading-groups', function(){
+            this.element.on('click', '.heading-groups, .unread-alert', function(){
                 $(".side-two").css({
                     "left": "0"
-                });
-                self.element.find('.compose-sideBar ul').empty();
-                $.getJSON(self.options.baseUrl + '/mattermost/mattermostChat/getMyChannels?teamid='+self.options.teamName, function(data){
-                    self._addGroups(data);
                 });
             });
             this.element.on('click', '.groups-back', function(){
@@ -90,7 +88,7 @@
                     "left": "-100%"
                 });
             });
-            this.element.on('click', '.heading-name-meta, .heading-close', function(){
+            this.element.on('click', '.heading-name-meta, .heading-close, .unread-alert', function(){
                 if(self.element.find('.side').is(':visible')) {
                     self.element.find('.side').hide();
                     var container = self.element.find('.container');
@@ -100,6 +98,7 @@
                     }
                     self.element.find('.conversation').removeClass('col-sm-8').addClass('col-sm-12');
                 } else {
+                    self._stopAlert();
                     self.element.find('.side').show();
                     var container = self.element.find('.container');
                     if(window.outerWidth >= 768) {
@@ -142,7 +141,26 @@
                 var me = $(this).parent();
                 if(me.data('id').localeCompare(self.currentChannelId) !== 0) {
                     self.element.find('.groups-back').trigger('click');
+                    //update selected group
+                    self.element.find('#groups .sideBar-time i').remove();
                     self.changeChannel(me.data('id'), me.data('name'));
+                    //update unread messages
+                    var numberUnread = me.find('span.unread-messages').text();
+                    if(numberUnread.length > 0) {
+                        numberUnread = parseInt(numberUnread);
+                        var totalUnread = parseInt(self.element.find('.heading-groups span').text());
+                        var badge = self.element.find('.chat-reduce span.badge');
+                        var newTotal = totalUnread - numberUnread;
+                        if(newTotal == 0) {
+                            self.element.find('.heading-groups span').text("");
+                            badge.text("");
+                        } else {
+                            self.element.find('.heading-groups span').text(newTotal);
+                            badge.text(newTotal);
+                        }
+                    }
+                    me.find('span.unread-messages').text("");
+
                 }
             });
 
@@ -158,6 +176,19 @@
                 self.element.find('.app').removeClass('reduce');
                 self.element.find('.app-one').show();
                 self.element.find('.chat-reduce').hide();
+                //update counts
+                var span = self.element.find('.groupid[data-id="'+self.currentChannelId+'"] span.unread-messages');
+                if(span.text().length > 0) {
+                    var number = parseInt(span.text());
+                    var badge = self.element.find('.chat-reduce span.badge');
+                    var total = parseInt(badge.text());
+                    if(total - number > 0) {
+                        badge.text(total-number);
+                    } else {
+                        badge.text("");
+                    }
+                }
+                self.element.find('.groupid[data-id="'+self.currentChannelId+'"] .unread-messages').text("");
             });
 
             //resize textarea if multiline
@@ -244,6 +275,11 @@
                     self.currentChannelName = data.channelname;
                     self.changeChannel(self.currentChannelId, self.currentChannelName);
                 });
+                //get my groups once and for all
+                self.element.find('.compose-sideBar ul').empty();
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostChat/getMyChannels?teamid='+self.options.teamName, function(data){
+                    self._addGroups(data);
+                });
             });
 
 
@@ -298,7 +334,7 @@
                 //connect to websocket fail -> fallback to long poll
                 self.lastupdate = Date.now();
                 self.timer = setInterval(function () {
-                    self._refresh()
+                    self._refresh();
                 }, 10000);
             };
             self.conn.onmessage = function(event) {
@@ -315,9 +351,7 @@
                             var post = JSON.parse(msg.data.post);
                             post['sender_name'] = msg.data.sender_name;
                             post['message'] = marked(post['message']); //render markdown
-                            if (post.channel_id.localeCompare(self.currentChannelId) == 0) {
-                                self._addPost(post);
-                            }
+                            self._addPost(post);
                             break;
                         case "status_change":
                             var userId = msg.data.user_id;
@@ -355,8 +389,12 @@
             this.element.find('.sideBar ul').empty();
             this.element.find('.message-previous').nextAll().remove();
             this.element.find('.channel-name').text(channelName);
+            //sometimes there's a race condition at startup tha add the icon twice
+            if(this.element.find('.groupid[data-id="' + channelId + '"] .sideBar-time i').length == 0) {
+                this.element.find('.groupid[data-id="' + channelId + '"] .sideBar-time').append('<i class="fa fa-check fa-2x"></i>');
+            }
             self.currentChannelId = channelId;
-            $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId, function(data){
+            $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId, function(data, textStatus, jqHXR){
                 self._addPosts(data);
                 if(self.connFailCount !== 0) { //no websocket : start polling
                     //periodic refresh
@@ -433,18 +471,57 @@
         },
         _addPost : function(data, reverse) {
             var post = data;
-            var messages = $('.message-body').filter(function(){
-                return ($(this).data('id').localeCompare(data.id) == 0);
-            });
-            if(messages.length == 0){
-                //no message with same id -> insert
-                if(this.options.userName.localeCompare(data.sender_name) == 0) {
-                    this._addMyPost(data, reverse);
-                } else {
-                    this._addOtherPost(data, reverse);
+            if (post.channel_id.localeCompare(this.currentChannelId) == 0) {
+                var messages = $('.message-body').filter(function () {
+                    return ($(this).data('id').localeCompare(data.id) == 0);
+                });
+                if (messages.length == 0) {
+                    //no message with same id -> insert
+                    if (this.options.userName.localeCompare(data.sender_name) == 0) {
+                        this._addMyPost(data, reverse);
+                    } else {
+                        this._addOtherPost(data, reverse);
+                    }
+                }
+                if(this._isMinimized()) {
+                    if(this.groupIds.includes(post.channel_id)) {
+                        var span = this.element.find('.groupid[data-id="'+post.channel_id+'"] span.unread-messages');
+                        if(span.text().length > 0) {
+                            span.text(parseInt(span.text())+1);
+                        } else {
+                            span.text("1");
+                        }
+                        var total = this.element.find('.chat-reduce span.badge');
+                        var totalNumber = 0;
+                        if(total.text().length > 0) {
+                            totalNumber = parseInt(total.text())+1;
+                        } else {
+                            totalNumber = 1;
+                        }
+                        total.text(totalNumber);
+                    }
+                }
+                this._scrollToBottom();
+            } else {
+                if(this.groupIds.includes(post.channel_id)) {
+                    var span = this.element.find('.groupid[data-id="'+post.channel_id+'"] span.unread-messages');
+                    if(span.text().length > 0) {
+                        span.text(parseInt(span.text())+1);
+                    } else {
+                        span.text("1");
+                    }
+                    var total = this.element.find('.heading-groups span');
+                    var totalNumber = 0;
+                    if(total.text().length > 0) {
+                        totalNumber = parseInt(total.text())+1;
+                    } else {
+                        totalNumber = 1;
+                    }
+                    total.text(totalNumber);
+                    this.element.find('.chat-reduce span.badge').text(totalNumber);
+                    this._alert();
                 }
             }
-            this._scrollToBottom();
         },
         _addMyPost: function(data, reverse) {
             var date = moment(data.update_at);
@@ -600,6 +677,8 @@
                     self._changeStatus(me.find('.user-status'), data.status);
                 });
             });
+            //refresh every minute
+            setTimeout(function(){self._updateStatuses()}, 60000);
         },
         _changeStatuses: function(data) {
             for(var i in data.data) {
@@ -635,7 +714,7 @@
                     'initial',
                     {data: ['id', 'name']},
                 ],
-                item: '<li class="list-inline">' +
+                item: '<li class="list-inline groupid">' +
                 '<div class="row sideBar-body group">'+
                     '<div class="col-sm-3 col-xs-3 sideBar-avatar">'+
                         '<div class="heading-avatar-circle">'+
@@ -647,13 +726,15 @@
                             '<div class="col-sm-8 col-xs-8 sideBar-name">'+
                                 '<span class="name-meta spanname"></span>'+
                             '</div>'+
-                            '<div class="col-sm-4 col-xs-4 pull-right sideBar-time">'+
+                            '<div class="col-sm-2 col-xs-2 sideBar-time">'+
                             '</div>'+
+                            '<div class="col-sm-2 col-xs-2 sideBar-messages pull-right"><span class="badge unread-messages"></span></div>'+
                         '</div>'+
                     '</div>'+
                 '</div></li>'
             };
             var values = [];
+            var groupIds = [];
             for(var i in data) {
                 var value = {
                     spanname: data[i].name,
@@ -661,8 +742,10 @@
                     id: data[i].id,
                     name: data[i].name
                 };
+                groupIds.push(data[i].id);
                 values.push(value);
             }
+            self.groupIds = groupIds;
             var groupList = new List('groups', options, values);
             this.element.find('.group').each(function(index){
                 var color = self._getRandomColor();
@@ -676,8 +759,11 @@
         },
         _refresh: function() {
             var self = this;
-            $.getJSON(this.options.baseUrl+'/mattermost/mattermostchat/getLastPosts?lastupdate='+self.lastupdate+'&channelid='+self.currentChannelId, function(data){
-                self._addPosts(data);
+            $.getJSON(this.options.baseUrl+'/mattermost/mattermostchat/getLastPosts?lastupdate='+self.lastupdate+'&channelid='+self.currentChannelId,
+                function(data, textStatus, jqHXR){
+                if(jqHXR.status !== 304) {
+                    self._addPosts(data);
+                }
                 self.lastupdate = Date.now();
             });
         },
@@ -698,6 +784,23 @@
         _sendGetStatuses: function() {
             var self = this;
             this._sendWebsocketMessage("get_statuses", null, function(data){self._changeStatuses(data)});
+        },
+        /**
+         * Return true is chat is minimized
+         * @private
+         */
+        _isMinimized: function() {
+            return this.element.find('.app').hasClass('reduce');
+        },
+        _alert: function() {
+            if(!this.element.find('.side').is(':visible')) {
+                this.element.find('.app-one').css('overflow', 'visible');
+                this.element.find('.unread-alert').show();
+            }
+        },
+        _stopAlert: function() {
+            this.element.find('.app-one').css('overflow', 'hidden');
+            this.element.find('.unread-alert').hide();
         },
         /** Utilitary methods */
         _yiq: function(rgb) {
