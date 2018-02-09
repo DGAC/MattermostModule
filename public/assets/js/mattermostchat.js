@@ -51,7 +51,8 @@
             token: "",
             serverUrl:"",
             minimized: false,
-            acknowledgement: false
+            acknowledgement: false,
+            utc: false
         },
         currentChannelId: "",
         currentChannelName: "",
@@ -447,14 +448,15 @@
         },
         _addMyPost: function(data, reverse) {
             var date = moment(data.update_at);
-            var dateString = date.format("ddd h:mm");
+            var dateString = this.options.utc ? date.utc().format("ddd HH:mm") : date.format("ddd HH:mm");
+            var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
             var post = $('<div class="row message-body"  data-id="'+data.id+'">' +
                 '<div class="col-sm-12 message-main-receiver">' +
                 '<div class="receiver">' +
                 '<div class="message-text">' +
                 data.message +
                 '</div>' +
-                '<span class="message-time pull-right">' +
+                '<span class="message-time pull-right" title="'+fullDateString+'">' +
                 dateString+
                 '</span>' +
                 '</div>' +
@@ -468,7 +470,8 @@
         },
         _addOtherPost: function(data, reverse) {
             var date = moment(data.update_at);
-            var dateString = date.format("ddd h:mm");
+            var dateString = this.options.utc ? date.utc().format("ddd D, HH:mm") : date.format("ddd D, HH:mm");
+            var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
             var postid = data.id;
             var post = $('<div class="row message-body" data-id="'+postid+'">' +
                 '<div class="col-sm-12 message-main-sender">' +
@@ -476,8 +479,8 @@
                         '<div class="message-text">' +
                         data.message +
                         '</div>' +
-                        '<span class="message-time pull-right">' +
-                        data.sender_name + ', ' + dateString+
+                        '<span class="message-time pull-right" title="'+fullDateString+'">' +
+                        data.sender_name + ' - ' + dateString+
                         '</span>' +
                     '</div>' +
                 '</div>' +
@@ -530,7 +533,7 @@
             var values = [];
             for(var i in data){
                 var date = moment(data[i].lastviewedat);
-                var dateString = date.format("ddd D, h:mm");
+                var dateString = this.options.utc ? date.utc().format("ddd D, HH:mm") : date.format("ddd D, HH:mm");
                 var value = {
                     id: data[i].id,
                     fullname: data[i].username,
