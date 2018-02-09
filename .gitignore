@@ -2,6 +2,9 @@
 composer.phar
 vendor/
 
+# Bower files
+public/components/
+
 # Local configs
 config/autoload/*.local.php
 
@@ -18,7 +21,6 @@ temp/
 #Doctrine 2
 data/DoctrineORMModule/Proxy/
 data/DoctrineORMModule/cache/
-
 
 # Legacy ZF1
 demos/

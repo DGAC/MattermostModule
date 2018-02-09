@@ -1,0 +1,24 @@
+{
+  "name": "MattermostModule",
+  "authors": [
+    "Bruno Spyckerelle <bruno.spyckerelle@aviation-civile.gouv.fr>"
+  ],
+  "description": "ZF2/Bootstrap3 Module for Mattermost",
+  "main": "",
+  "moduleType": [],
+  "license": "GPL-3",
+  "homepage": "https://github.com/BrunoSpy/MattermostModule",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "public/components/"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.5",
+    "jquery-ui": "~1.11.4",
+    "bootstrap-markdown": "^2.10.0",
+    "marked": "^0.3.9",
+    "list.js": "^1.5.0",
+    "lightbox2": "lightbox#^2.10.0"
+  }
+}

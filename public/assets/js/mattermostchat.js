@@ -462,6 +462,24 @@
                 '</div>' +
                 '</div>' +
                 '</div>');
+            if(data['images']){
+                var images = $('<div class="mattermost_files"></div>');
+                for(var i in data.images){
+                    var file = data.images[i];
+                    var imageDiv = $('<div class="mattermost_thumbnail"></div>');
+                    var image = $('<a href="'+file.file+'">')
+                        .attr('data-lightbox', file.id)
+                        .append('<img src="'+file.thumbnail+'">');
+                    image.click(function(e){
+                        e.preventDefault();
+                        lightbox.start($(this));
+                        return false;
+                    });
+                    imageDiv.append(image);
+                    images.append(imageDiv);
+                }
+                post.find('.message-text').append('<hr>').append(images);
+            }
             if(reverse === undefined){
                 $("#conversation").append(post);
             } else {
@@ -493,6 +511,24 @@
                         post.find('.message-main-sender').append('<div class="ack" title="Accuser réception" data-id="'+postid+'"><span class="fa fa-check"></span></div>');
                     }
                 });
+            }
+            if(data['images']){
+                var images = $('<div class="mattermost_files"></div>');
+                for(var i in data.images){
+                    var file = data.images[i];
+                    var imageDiv = $('<div class="mattermost_thumbnail"></div>');
+                    var image = $('<a href="'+file.file+'">')
+                        .attr('data-lightbox', file.id)
+                        .append('<img src="'+file.thumbnail+'">');
+                    image.click(function(e){
+                        e.preventDefault();
+                        lightbox.start($(this));
+                        return false;
+                    });
+                    imageDiv.append(image);
+                    images.append(imageDiv);
+                }
+                post.find('.message-text').append('<hr>').append(images);
             }
             if(reverse === undefined) {
                 $("#conversation").append(post);
