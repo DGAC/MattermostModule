@@ -1,6 +1,6 @@
 # Chat module for ZF2 and Bootstrap 3
 
-**WIP : You can try it but it needs more love :)**
+**WIP : This module is usable but it needs more love :)**
 
 ## Installation
 
