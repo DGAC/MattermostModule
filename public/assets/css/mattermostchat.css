@@ -486,6 +486,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   margin-bottom: 0px;
 }
 
+.mattermost_files {
+  display: flex;
+}
+
+.mattermost_thumbnail {
+  margin-right: 5px;
+}
+
 .message-time {
   margin: 0 !important;
   margin-left: 50px !important;

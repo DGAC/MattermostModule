@@ -108,6 +108,37 @@ class MattermostChatController extends AbstractActionController
         return new JsonModel($json);
     }
 
+    function getImagesAction()
+    {
+        $filesId = $this->params()->fromQuery('filesId', null);
+        $json = array();
+        if($filesId) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if(!is_array($filesId)) {
+                $filesId = explode(",", $filesId);
+            }
+            foreach ($filesId as $fileId) {
+                if(!file_exists('./public/mattermost_files/img/thumbnails') && !is_dir('./public/mattermost/img/thumbnails')) {
+                    mkdir('./public/mattermost_files/img/thumbnails', 0700, true);
+                }
+                if(!file_exists('./public/mattermost_files/img/thumbnails/'.$fileId)){
+                    file_put_contents('./public/mattermost_files/img/thumbnails/'.$fileId, $this->mattermost->getFileThumbnail($fileId));
+                }
+                if(!file_exists('./public/mattermost_files/img/'.$fileId)){
+                    file_put_contents('./public/mattermost_files/img/'.$fileId, $this->mattermost->getFile($fileId));
+                }
+                if(strpos(finfo_file($finfo, './public/mattermost_files/img/'.$fileId), "image") !== false) {
+                    $file = array();
+                    $file['id'] = $fileId;
+                    $file['thumbnail'] = './mattermost_files/img/thumbnails/'.$fileId;
+                    $file['file'] = './mattermost_files/img/'.$fileId;
+                    $json[] = $file;
+                }
+            }
+        }
+        return new JsonModel($json);
+    }
+
     public function getChannelMembersAction()
     {
         $json = array();
@@ -168,6 +199,10 @@ class MattermostChatController extends AbstractActionController
         return new JsonModel($json);
     }
 
+    /**
+     * Post a 'ok' reaction to send an acknowledge
+     * @return JsonModel
+     */
     public function ackAction()
     {
         $json = array();
@@ -192,6 +227,10 @@ class MattermostChatController extends AbstractActionController
         return new JsonModel($json);
     }
 
+    /**
+     * Test if the post has a "ok" reaction, signifying the post has already been aknowledged
+     * @return JsonModel
+     */
     public function isAckAction()
     {
         $json = array();

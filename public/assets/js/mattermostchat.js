@@ -345,6 +345,7 @@
                             post['sender_name'] = msg.data.sender_name;
                             post['message'] = marked(post['message']); //render markdown
                             self._addPost(post);
+                            //console.log(post);
                             break;
                         case "status_change":
                             var userId = msg.data.user_id;
@@ -539,23 +540,16 @@
                 '</div>' +
                 '</div>' +
                 '</div>');
+            if(data['file_ids']) {
+                //this key exists only if posts came from websocket
+                //we need to request the server via api
+                var self = this;
+                $.getJSON(this.options.baseUrl + '/mattermost/MattermostChat/getImages?filesId='+data.file_ids, function(data){
+                    self._addImagesToPost(data, post);
+                });
+            }
             if(data['images']){
-                var images = $('<div class="mattermost_files"></div>');
-                for(var i in data.images){
-                    var file = data.images[i];
-                    var imageDiv = $('<div class="mattermost_thumbnail"></div>');
-                    var image = $('<a href="'+file.file+'">')
-                        .attr('data-lightbox', file.id)
-                        .append('<img src="'+file.thumbnail+'">');
-                    image.click(function(e){
-                        e.preventDefault();
-                        lightbox.start($(this));
-                        return false;
-                    });
-                    imageDiv.append(image);
-                    images.append(imageDiv);
-                }
-                post.find('.message-text').append('<hr>').append(images);
+                this._addImagesToPost(data.images, post);
             }
             if(reverse === undefined){
                 $("#conversation").append(post);
@@ -589,29 +583,40 @@
                     }
                 });
             }
+            if(data['file_ids']) {
+                //this key exists only if posts came from websocket
+                //we need to request the server via api
+                var self = this;
+                $.getJSON(this.options.baseUrl + '/mattermost/MattermostChat/getImages?filesId='+data.file_ids, function(data){
+                    self._addImagesToPost(data, post);
+                });
+            }
             if(data['images']){
-                var images = $('<div class="mattermost_files"></div>');
-                for(var i in data.images){
-                    var file = data.images[i];
-                    var imageDiv = $('<div class="mattermost_thumbnail"></div>');
-                    var image = $('<a href="'+file.file+'">')
-                        .attr('data-lightbox', file.id)
-                        .append('<img src="'+file.thumbnail+'">');
-                    image.click(function(e){
-                        e.preventDefault();
-                        lightbox.start($(this));
-                        return false;
-                    });
-                    imageDiv.append(image);
-                    images.append(imageDiv);
-                }
-                post.find('.message-text').append('<hr>').append(images);
+                this._addImagesToPost(data.images, post);
             }
             if(reverse === undefined) {
                 $("#conversation").append(post);
             } else {
                 post.insertAfter('.message-previous');
             }
+        },
+        _addImagesToPost: function(images, post) {
+            var imagesDiv = $('<div class="mattermost_files"></div>');
+            for(var i in images){
+                var file = images[i];
+                var imageDiv = $('<div class="mattermost_thumbnail"></div>');
+                var image = $('<a href="'+file.file+'">')
+                    .attr('data-lightbox', file.id)
+                    .append('<img src="'+file.thumbnail+'">');
+                image.click(function(e){
+                    e.preventDefault();
+                    lightbox.start($(this));
+                    return false;
+                });
+                imageDiv.append(image);
+                imagesDiv.append(imageDiv);
+            }
+            post.find('.message-text').append('<p>&nbsp;</p>').append(imagesDiv);
         },
         _addUsers: function(data){
             var self = this;
