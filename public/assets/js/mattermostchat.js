@@ -27,7 +27,8 @@
  *      token: "Authentication token, mandatory to activate websockets
  *      serverUrl : "the url of the webserver, without protocol",
  *      minimized : "Starts minimized, default : false",
- *      acknowledgement: "Add button to acknowledge a message, default : false"
+ *      acknowledgement: "Add button to acknowledge a message, default : false",
+ *      utc: "Diplay datetimes in UTC. Default : false"
  * });
  *
  * @author Bruno Spyckerelle
@@ -40,7 +41,7 @@
          *
          * @memberOf $
          */
-        version: "0.1.0",
+        version: "0.2.0",
 
         //default options
         options: {
@@ -124,16 +125,8 @@
             this.element.on('submit',' #send-form', function(e){
                 e.preventDefault();
                 $.post(self.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+self.currentChannelId, $("#send-form").serialize(), function(data){
-                    if(data['messages']){
-                        displayMessages(data.messages);
-                    }
-                    if(data['success']){
-                        console.log('test')
-                    }
-                }, 'json').fail(function(){
-                    var messages = '({error: ["Impossible d\'enregistrer l\'organisation."]})';
-                    displayMessages(eval(messages));
-                });
+                    //TODO manage errors
+                }, 'json');
             });
 
             //on change chat
@@ -273,7 +266,7 @@
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getchannelname?channelid='+self.currentChannelId, function(data){
                     self.element.find('span.channel-name').text(data.channelname);
                     self.currentChannelName = data.channelname;
-                    self.changeChannel(self.currentChannelId, self.currentChannelName);
+                    self.changeChannel(self.currentChannelId, self.currentChannelName, false);
                 });
                 //get my groups once and for all
                 self.element.find('.compose-sideBar ul').empty();
@@ -379,7 +372,7 @@
         minimize : function() {
             this.element.find('#reduce-chat').trigger('click');
         },
-        changeChannel : function(channelId, channelName) {
+        changeChannel : function(channelId, channelName, alert) {
             var self = this;
             //stop previous refresh
             if(self.timer !== null && self.connFailCount == 0) {
@@ -395,7 +388,7 @@
             }
             self.currentChannelId = channelId;
             $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId, function(data, textStatus, jqHXR){
-                self._addPosts(data);
+                self._addPosts(data, false, alert);
                 if(self.connFailCount !== 0) { //no websocket : start polling
                     //periodic refresh
                     self.lastupdate = Date.now();
@@ -448,7 +441,14 @@
         /* *************** */
         /* Private Methods */
         /* *************** */
-        _addPosts: function(data, reverse) {
+        /**
+         *
+         * @param data
+         * @param reverse : Reverse posts order. Default: false.
+         * @param alert : Alert if new posts. Default : true.
+         * @private
+         */
+        _addPosts: function(data, reverse, alert) {
             var posts = [];
             for(var i in data)
             {
@@ -466,10 +466,10 @@
             var numberPosts = posts.length;
             //insert each post
             for (var i = 0; i < numberPosts; i++) {
-                this._addPost(posts[i], reverse);
+                this._addPost(posts[i], reverse, alert);
             }
         },
-        _addPost : function(data, reverse) {
+        _addPost : function(data, reverse, alert) {
             var post = data;
             if (post.channel_id.localeCompare(this.currentChannelId) == 0) {
                 var messages = $('.message-body').filter(function () {
@@ -483,7 +483,7 @@
                         this._addOtherPost(data, reverse);
                     }
                 }
-                if(this._isMinimized()) {
+                if(this._isMinimized() && (alert === undefined || alert == true)) {
                     if(this.groupIds.includes(post.channel_id)) {
                         var span = this.element.find('.groupid[data-id="'+post.channel_id+'"] span.unread-messages');
                         if(span.text().length > 0) {
@@ -793,7 +793,7 @@
             return this.element.find('.app').hasClass('reduce');
         },
         _alert: function() {
-            if(!this.element.find('.side').is(':visible')) {
+            if(!(this.element.find('.side').css('display') == 'block')) {
                 this.element.find('.app-one').css('overflow', 'visible');
                 this.element.find('.unread-alert').show();
             }
