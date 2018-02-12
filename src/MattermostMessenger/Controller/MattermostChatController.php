@@ -39,6 +39,9 @@ class MattermostChatController extends AbstractActionController
         $this->markdownService = $markdown;
     }
 
+    /**
+     * @return JsonModel
+     */
     public function sendMessageAction()
     {
         $json = array();
@@ -46,7 +49,20 @@ class MattermostChatController extends AbstractActionController
         if ($this->getRequest()->isPost()) {
             $post = $this->getRequest()->getPost();
             $result = $this->mattermost->sendMessageToChannel($post['comment'], $channelid);
-            $json['result'] = $result;
+            $response = json_decode($result->getBody());
+            $json['id'] = $response->id;
+        }
+        return new JsonModel($json);
+    }
+
+    public function patchMessageAction()
+    {
+        $json = array();
+        if ($this->getRequest()->isPost()) {
+            $post = $this->getRequest()->getPost();
+            $result = $this->mattermost->patchMessage($post['postId'], $post['comment']);
+            $response = json_decode($result->getBody());
+            $json['id'] = $response->id;
         }
         return new JsonModel($json);
     }

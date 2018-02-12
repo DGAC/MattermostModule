@@ -20,6 +20,7 @@ namespace MattermostMessenger\Service;
 
 use Gnello\Mattermost\Driver;
 use Pimple\Container;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class MattermostService
@@ -92,7 +93,7 @@ class MattermostService
     /**
      * @param $message
      * @param $channelId
-     * @return int 201 if successfull
+     * @return ResponseInterface
      */
     public function sendMessageToChannel($message, $channelId)
     {
@@ -101,7 +102,21 @@ class MattermostService
             'message' => $message
         );
         $result = $this->getClient()->getPostModel()->createPost($requestOptions);
-        return $result->getStatusCode();
+        return $result;
+    }
+
+    /**
+     * @param $postId
+     * @param $message
+     * @return ResponseInterface
+     */
+    public function patchMessage($postId, $message)
+    {
+        $requestOptions = array(
+            'message' => $message
+        );
+        $result = $this->getClient()->getPostModel()->patchPost($postId, $requestOptions);
+        return $result;
     }
 
     /**
