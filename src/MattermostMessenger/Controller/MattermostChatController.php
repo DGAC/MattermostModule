@@ -67,6 +67,14 @@ class MattermostChatController extends AbstractActionController
         return new JsonModel($json);
     }
 
+    public function getMyIdAction()
+    {
+        $json = array();
+        $myId = $this->mattermost->getMyId();
+        $json['id'] = $myId;
+        return new JsonModel($json);
+    }
+
     public function getLastPostsAction()
     {
         $json = array();

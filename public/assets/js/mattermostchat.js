@@ -62,6 +62,7 @@
             utc: false,
             dateFormat : "ddd D, HH:mm"
         },
+        myId: "",
         currentChannelId: "",
         currentChannelName: "",
         /**
@@ -265,6 +266,9 @@
             $.when(
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getDefaultChannelId?teamid=' + self.options.teamName, function (data) {
                     self.currentChannelId = data.channelid;
+                }),
+                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getMyID', function(data){
+                    self.myId = data.id;
                 })
             ).then(function(){
                 if(self.options.channelId.localeCompare("") !== 0) {
@@ -495,7 +499,10 @@
                 messages.detach().appendTo('#conversation');
             }
             //else message not displayed
-            this._alertPost(post.channel_id);
+            //alert if post is not mine
+            if(this.myId.localeCompare(post.user_id) !== 0) {
+                this._alertPost(post.channel_id);
+            }
         },
         _alertPost: function(channelId, alert){
             if(channelId.localeCompare(this.currentChannelId) == 0) {
@@ -554,7 +561,9 @@
                 }
                 this._scrollToBottom();
             }
-            this._alertPost(post.channel_id, alert);
+            if(this.myId.localeCompare(post.user_id) !== 0){
+                this._alertPost(post.channel_id, alert);
+            }
         },
         _addMyPost: function(data, reverse) {
             var date = moment(data.update_at);
