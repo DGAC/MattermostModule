@@ -293,6 +293,7 @@
                 .ajaxSend(function(event, jqxhr, settings){
                     if(settings.url.indexOf('getLastPosts') > -1 && settings.url.indexOf('lastupdate') == -1) {
                         $('#conversation').addClass('load');
+                        $('.chat-reduce .fa-comments').addClass('fa-spin');
                     }
                     if(settings.url.indexOf('getChannelMembers') > -1) {
                         $(".sideBar").addClass('load');
@@ -307,6 +308,7 @@
                 .ajaxComplete(function(event, jqxhr, settings){
                     if(settings.url.indexOf('getLastPosts') > -1 && settings.url.indexOf('lastupdate') == -1) {
                         $('#conversation').removeClass('load');
+                        $('.chat-reduce .fa-comments').removeClass('fa-spin');
                     }
                     if(settings.url.indexOf('getChannelMembers') > -1) {
                         $(".sideBar").removeClass('load');
