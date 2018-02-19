@@ -15,12 +15,17 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
+/**
  * Mattermost Chat - JQuery UI Widget
+ *
+ * Websocket is not mandatory but many features will not work properly if disabled :
+ * - Posts refresh is done via long poll
+ * - No update of edited posts
+ * - Update of users status only every minute
  *
  * Usage :
  * $('element').mattermostchat({
- *      baseurl: "base url",
+ *      baseUrl: "base url",
  *      channelId: "[optional] default channelId",
  *      teamName : "Name of the team"
  *      userName: "Login to use"
@@ -28,7 +33,8 @@
  *      serverUrl : "the url of the webserver, without protocol",
  *      minimized : "Starts minimized, default : false",
  *      acknowledgement: "Add button to acknowledge a message, default : false",
- *      utc: "Diplay datetimes in UTC. Default : false"
+ *      utc: "Diplay datetimes in UTC. Default : false",
+ *      dateFormat: "MomentJS format. Default : ddd D, HH:mm"
  * });
  *
  * @author Bruno Spyckerelle
@@ -41,7 +47,7 @@
          *
          * @memberOf $
          */
-        version: "0.2.0",
+        version: "0.3.0",
 
         //default options
         options: {
@@ -53,8 +59,10 @@
             serverUrl:"",
             minimized: false,
             acknowledgement: false,
-            utc: false
+            utc: false,
+            dateFormat : "ddd D, HH:mm"
         },
+        myId: "",
         currentChannelId: "",
         currentChannelName: "",
         /**
@@ -259,6 +267,9 @@
             $.when(
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getDefaultChannelId?teamid=' + self.options.teamName, function (data) {
                     self.currentChannelId = data.channelid;
+                }),
+                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getMyID', function(data){
+                    self.myId = data.id;
                 })
             ).then(function(){
                 if(self.options.channelId.localeCompare("") !== 0) {
@@ -348,6 +359,11 @@
                             self._addPost(post);
                             //console.log(post);
                             break;
+                        case "post_edited":
+                            var post = JSON.parse(msg.data.post);
+                            post['message'] = marked(post['message']); //render markdown
+                            self._updatePost(post);
+                            break;
                         case "status_change":
                             var userId = msg.data.user_id;
                             var status = msg.data.status;
@@ -419,19 +435,16 @@
          * Send a message to the current channel
          * @param message
          */
-        sendMessage: function(message){
+        sendMessage: function(message, successCallback){
             var post = {'comment': message};
-            $.post(this.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+this.currentChannelId, post, function(data){
-                    if(data['messages']){
-                        displayMessages(data.messages);
-                    }
-                    if(data['success']){
-                        console.log('test')
-                    }
-                }, 'json').fail(function(){
-                    var messages = '({error: ["Impossible d\'enregistrer l\'organisation."]})';
-                    displayMessages(eval(messages));
-                });
+            $.post(this.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+this.currentChannelId, post, function(data){successCallback(data)}, 'json');
+        },
+        patchMessage: function(message, postId){
+            var post = {
+                'comment': message,
+                'postId': postId
+            };
+            $.post(this.options.baseUrl+'/mattermost/MattermostChat/patchMessage', post);
         },
         /**
          * Change my status
@@ -443,6 +456,7 @@
         /* *************** */
         /* Private Methods */
         /* *************** */
+
         /**
          *
          * @param data
@@ -471,23 +485,31 @@
                 this._addPost(posts[i], reverse, alert);
             }
         },
-        _addPost : function(data, reverse, alert) {
-            var post = data;
-            if (post.channel_id.localeCompare(this.currentChannelId) == 0) {
-                var messages = $('.message-body').filter(function () {
-                    return ($(this).data('id').localeCompare(data.id) == 0);
-                });
-                if (messages.length == 0) {
-                    //no message with same id -> insert
-                    if (this.options.userName.localeCompare(data.sender_name) == 0) {
-                        this._addMyPost(data, reverse);
-                    } else {
-                        this._addOtherPost(data, reverse);
-                    }
-                }
+        _updatePost: function(post) {
+            var messages = $('.message-body').filter(function () {
+                return ($(this).data('id').localeCompare(post.id) == 0);
+            });
+            if(messages.length == 1) {
+                messages.find('.message-text').html(post.message);
+                var date = moment(post.update_at);
+                var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
+                var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
+                messages.find('.message-time').attr('title', fullDateString);
+                messages.find('.message-datetime').text(dateString);
+                //TODO by doing this posts' order will be different at startup
+                messages.detach().appendTo('#conversation');
+            }
+            //else message not displayed
+            //alert if post is not mine
+            if(this.myId.localeCompare(post.user_id) !== 0) {
+                this._alertPost(post.channel_id);
+            }
+        },
+        _alertPost: function(channelId, alert){
+            if(channelId.localeCompare(this.currentChannelId) == 0) {
                 if(this._isMinimized() && (alert === undefined || alert == true)) {
-                    if(this.groupIds.includes(post.channel_id)) {
-                        var span = this.element.find('.groupid[data-id="'+post.channel_id+'"] span.unread-messages');
+                    if(this.groupIds.includes(channelId)) {
+                        var span = this.element.find('.groupid[data-id="'+channelId+'"] span.unread-messages');
                         if(span.text().length > 0) {
                             span.text(parseInt(span.text())+1);
                         } else {
@@ -503,10 +525,9 @@
                         total.text(totalNumber);
                     }
                 }
-                this._scrollToBottom();
             } else {
-                if(this.groupIds.includes(post.channel_id)) {
-                    var span = this.element.find('.groupid[data-id="'+post.channel_id+'"] span.unread-messages');
+                if(this.groupIds.includes(channelId)) {
+                    var span = this.element.find('.groupid[data-id="'+channelId+'"] span.unread-messages');
                     if(span.text().length > 0) {
                         span.text(parseInt(span.text())+1);
                     } else {
@@ -525,9 +546,29 @@
                 }
             }
         },
+        _addPost: function(data, reverse, alert) {
+            var post = data;
+            if (post.channel_id.localeCompare(this.currentChannelId) == 0) {
+                var messages = $('.message-body').filter(function () {
+                    return ($(this).data('id').localeCompare(data.id) == 0);
+                });
+                if (messages.length == 0) {
+                    //no message with same id -> insert
+                    if (this.options.userName.localeCompare(data.sender_name) == 0) {
+                        this._addMyPost(data, reverse);
+                    } else {
+                        this._addOtherPost(data, reverse);
+                    }
+                }
+                this._scrollToBottom();
+            }
+            if(this.myId.localeCompare(post.user_id) !== 0){
+                this._alertPost(post.channel_id, alert);
+            }
+        },
         _addMyPost: function(data, reverse) {
             var date = moment(data.update_at);
-            var dateString = this.options.utc ? date.utc().format("ddd HH:mm") : date.format("ddd HH:mm");
+            var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
             var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
             var post = $('<div class="row message-body"  data-id="'+data.id+'">' +
                 '<div class="col-sm-12 message-main-receiver">' +
@@ -536,7 +577,7 @@
                 data.message +
                 '</div>' +
                 '<span class="message-time pull-right" title="'+fullDateString+'">' +
-                dateString+
+                '<span class="message-datetime">'+dateString+'</span>'+
                 '</span>' +
                 '</div>' +
                 '</div>' +
@@ -560,7 +601,7 @@
         },
         _addOtherPost: function(data, reverse) {
             var date = moment(data.update_at);
-            var dateString = this.options.utc ? date.utc().format("ddd D, HH:mm") : date.format("ddd D, HH:mm");
+            var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
             var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
             var postid = data.id;
             var post = $('<div class="row message-body" data-id="'+postid+'">' +
@@ -570,7 +611,7 @@
                         data.message +
                         '</div>' +
                         '<span class="message-time pull-right" title="'+fullDateString+'">' +
-                        data.sender_name + ' - ' + dateString+
+                        data.sender_name + ' - <span class="message-datetime">' + dateString+'</span>'+
                         '</span>' +
                     '</div>' +
                 '</div>' +
