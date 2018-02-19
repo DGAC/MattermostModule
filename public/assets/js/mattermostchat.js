@@ -182,6 +182,7 @@
                     }
                 }
                 self.element.find('.groupid[data-id="'+self.currentChannelId+'"] .unread-messages').text("");
+                self._scrollToBottom(true);
             });
 
             //resize textarea if multiline
@@ -844,9 +845,15 @@
             }
             return [r, g, b];
         },
-        _scrollToBottom: function() {
+        /**
+         *
+         * @param force
+         * @private
+         */
+        _scrollToBottom: function(force) {
+            force = (typeof force !== 'undefined') ? force : false;
             var container = this.element.find('#conversation');
-            if (!this.userScroll) {
+            if (!this.userScroll || force == true) {
                 //go to the last message only if no user scroll
                 container.scrollTop(container[0].scrollHeight);
             }
