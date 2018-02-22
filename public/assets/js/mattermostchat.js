@@ -29,7 +29,6 @@
  *      channelId: "[optional] default channelId",
  *      teamName : "Name of the team"
  *      userName: "Login to use"
- *      token: "Authentication token, mandatory to activate websockets
  *      serverUrl : "the url of the webserver, without protocol",
  *      minimized : "Starts minimized, default : false",
  *      acknowledgement: "Add button to acknowledge a message, default : false",
@@ -55,7 +54,6 @@
             userName: "",
             teamName: "",
             channelId: "",
-            token: "",
             serverUrl:"",
             minimized: false,
             acknowledgement: false,
@@ -270,20 +268,25 @@
                 $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getMyID', function(data){
                     self.myId = data.id;
                 })
-            ).then(function(){
-                if(self.options.channelId.localeCompare("") !== 0) {
+            ).then(function(data, textStatus, jqHXR){
+                if (self.options.channelId.localeCompare("") !== 0) {
                     self.currentChannelId = self.options.channelId;
                 }
-                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getchannelname?channelid='+self.currentChannelId, function(data){
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getchannelname?channelid=' + self.currentChannelId, function (data) {
                     self.element.find('span.channel-name').text(data.channelname);
                     self.currentChannelName = data.channelname;
                     self.changeChannel(self.currentChannelId, self.currentChannelName, false);
                 });
                 //get my groups once and for all
                 self.element.find('.compose-sideBar ul').empty();
-                $.getJSON(self.options.baseUrl + '/mattermost/mattermostChat/getMyChannels?teamid='+self.options.teamName, function(data){
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostChat/getMyChannels?teamid=' + self.options.teamName, function (data) {
                     self._addGroups(data);
                 });
+            }).fail(function(data, textStatus, jqHXR){
+                self.element.find('#conversation')
+                    .removeClass('load')
+                    .append('<p class="bg-danger">'+data.responseJSON.detail+'</p>');
+                self.element.find('.chat-reduce button').addClass('btn-danger').removeClass('btn-info');
             });
 
 
@@ -328,6 +331,9 @@
                     }
                 });
 
+            $.when($.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getMyToken', function(data){
+                self.options.token = data.token;
+            })).then(function(){
             //create websocket connection
             self.conn = new WebSocket("wss://"+self.options.serverUrl+'/api/v4/websocket');
             self.conn.onopen = function(event){
@@ -381,6 +387,7 @@
                     }
                 }
             };
+            });
         },
         /* *************** */
         /*  Public methods */

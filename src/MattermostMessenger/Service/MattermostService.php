@@ -68,7 +68,6 @@ class MattermostService
                 $this->myId = json_decode($result->getBody())->id;
                 $this->token = $result->getHeader('Token')[0];
             } else {
-                //TODO throw something or retry ?
                 error_log("Impossible de s'authentifier au serveur, erreur ".$result->getStatusCode());
             }
         }

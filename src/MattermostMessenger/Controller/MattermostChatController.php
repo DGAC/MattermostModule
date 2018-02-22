@@ -70,8 +70,22 @@ class MattermostChatController extends AbstractActionController
     public function getMyIdAction()
     {
         $json = array();
-        $myId = $this->mattermost->getMyId();
-        $json['id'] = $myId;
+        try {
+            $myId = $this->mattermost->getMyId();
+            $json['id'] = $myId;
+        } catch (\Exception $e) {
+            $this->getResponse()->setStatusCode(500);
+            $json['error'] = $e->getMessage();
+            return new JsonModel($json);
+        }
+        return new JsonModel($json);
+    }
+
+    public function getMyTokenAction()
+    {
+        $json = array();
+        $myId = $this->mattermost->getToken();
+        $json['token'] = $myId;
         return new JsonModel($json);
     }
 
