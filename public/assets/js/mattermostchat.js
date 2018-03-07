@@ -229,6 +229,7 @@
                 var container = self.element.find('#conversation')[0];
                 if (container.scrollHeight - container.scrollTop === container.clientHeight) {
                     self.userScroll = false;
+                    self.element.find('.alert-new-message').hide();
                 } else {
                     self.userScroll = true;
                 }
@@ -364,7 +365,7 @@
             }
             //empty sideBar and conversation
             this.element.find('.sideBar ul').empty();
-            this.element.find('.message-previous').nextAll().remove();
+            this.element.find('.message-body').remove();
             this.element.find('.channel-name').text(channelName);
             //sometimes there's a race condition at startup tha add the icon twice
             if(this.element.find('.groupid[data-id="' + channelId + '"] .sideBar-time i').length == 0) {
@@ -538,6 +539,11 @@
             }
             if(this.myId.localeCompare(post.user_id) !== 0){
                 this._alertPost(post.channel_id, alert);
+            }
+            if(this._elementsOutOfView()) {
+                this.element.find('.alert-new-message').show();
+            } else {
+                this.element.find('.alert-new-message').hide();
             }
         },
         _addMyPost: function(data, reverse) {
@@ -947,6 +953,18 @@
                 //go to the last message only if no user scroll
                 container.scrollTop(container[0].scrollHeight);
             }
+        },
+        _elementsOutOfView:function() {
+            var innerHeight = window.innerHeight;
+            var outOfView = false;
+            $('.message-body').each(function(index, element){
+                if(element.getBoundingClientRect().y + element.getBoundingClientRect().height > innerHeight) {
+                    outOfView = true;
+                    return false; //break loop
+                }
+            });
+            console.log('outofview '+outOfView);
+            return outOfView;
         }
     });
 })(jQuery);

@@ -682,6 +682,17 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 .unread-alert .fa-2x {
   font-size: 1.8em !important;
 }
+.alert-new-message {
+  position: absolute;
+  bottom: 50px;
+  width: 100%;
+  z-index: 1;
+  background: linear-gradient(0deg, #ff6060, rgba(1, 0, 0, 0));
+  text-align: center;
+  height: 30px;
+  vertical-align: middle;
+  padding-top: 5px;
+}
 
 @media screen and (max-width: 700px) {
   .app {
