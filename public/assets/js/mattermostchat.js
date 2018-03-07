@@ -130,9 +130,12 @@
 
             this.element.on('submit',' #send-form', function(e){
                 e.preventDefault();
-                $.post(self.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+self.currentChannelId, $("#send-form").serialize(), function(data){
-                    //TODO manage errors
-                }, 'json');
+                if($("#comment").val().trim().length > 0) {
+                    $.post(self.options.baseUrl + '/mattermost/mattermostchat/sendMessage?channelid=' + self.currentChannelId, $("#send-form").serialize(), function (data) {
+                        self._scrollToBottom(true);
+                        //TODO manage errors
+                    }, 'json');
+                }
             });
 
             //on change chat
@@ -337,59 +340,7 @@
             $.when($.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getMyToken', function(data){
                 self.options.token = data.token;
             })).then(function(){
-            //create websocket connection
-            self.conn = new WebSocket("wss://"+self.options.serverUrl+'/api/v4/websocket');
-            self.conn.onopen = function(event){
-                self._sendWebsocketMessage("authentication_challenge",{"token": self.options.token}, null);
-            };
-            self.conn.onerror = function(event){
-                self.connFailCount = 1;
-                //connect to websocket fail -> fallback to long poll
-                self.lastupdate = Date.now();
-                self.timer = setInterval(function () {
-                    self._refresh();
-                }, 10000);
-            };
-            self.conn.onmessage = function(event) {
-                //console.log(event);
-                var msg = JSON.parse(event.data);
-                if(msg.seq_reply) {
-                    if(self.responseCallbacks[msg.seq_reply]) {
-                        self.responseCallbacks[msg.seq_reply](msg);
-                        delete self.responseCallbacks[msg.seq_reply];
-                    }
-                } else {
-                    switch (msg.event) {
-                        case "posted":
-                            var post = JSON.parse(msg.data.post);
-                            post['sender_name'] = msg.data.sender_name;
-                            post['message'] = marked(post['message']); //render markdown
-                            self._addPost(post);
-                            //console.log(post);
-                            break;
-                        case "post_edited":
-                            var post = JSON.parse(msg.data.post);
-                            post['message'] = marked(post['message']); //render markdown
-                            self._updatePost(post);
-                            break;
-                        case "status_change":
-                            var userId = msg.data.user_id;
-                            var status = msg.data.status;
-                            self._changeStatusByUserId(userId, status);
-                            break;
-                        case "reaction_added":
-                            if(self.options.acknowledgement) {
-                                var reaction = JSON.parse(msg.data.reaction);
-                                if(reaction.emoji_name.localeCompare("ok") == 0) {
-                                    self.element
-                                        .find('.ack[data-id="'+reaction.post_id+'"]').addClass('ack-sent')
-                                        .find('span').removeClass('fa-check').addClass('fa-check-square-o');
-                                }
-                            }
-                            break;
-                    }
-                }
-            };
+                self._websocketConnect();
             });
         },
         /* *************** */
@@ -446,7 +397,11 @@
          */
         sendMessage: function(message, successCallback){
             var post = {'comment': message};
-            $.post(this.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+this.currentChannelId, post, function(data){successCallback(data)}, 'json');
+            var self = this;
+            $.post(this.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+this.currentChannelId, post, function(data){
+                successCallback(data);
+                self._scrollToBottom(true);
+                }, 'json');
         },
         patchMessage: function(message, postId){
             var post = {
@@ -823,7 +778,82 @@
                 self.lastupdate = Date.now();
             });
         },
-        /** Web socket management **/
+        /* ********************** *
+         *  Web socket management *
+         * ********************** */
+        _websocketConnect: function() {
+            var self = this;
+            //create websocket connection
+            self.conn = new WebSocket("wss://"+self.options.serverUrl+'/api/v4/websocket');
+            self.conn.onopen = function(event){
+                self.connFailCount == 0;
+                self._sendWebsocketMessage("authentication_challenge",{"token": self.options.token}, null);
+            };
+            self.conn.onclose = function(event){
+                console.log('connection closed');
+                self.connFailCount++;
+                if(self.connFailCount >= 3) {
+                    //fall back to long poll
+                    //connect to websocket fail -> fallback to long poll
+                    self.lastupdate = Date.now();
+                    self.timer = setInterval(function () {
+                        self._refresh();
+                    }, 10000);
+                } else {
+                    //try to reconnect
+                    self.conn = null;
+                    self._websocketConnect();
+                }
+            };
+            self.conn.onerror = function(event){
+                self.connFailCount += 1;
+                //connect to websocket fail -> fallback to long poll
+                self.lastupdate = Date.now();
+                self.timer = setInterval(function () {
+                    self._refresh();
+                }, 10000);
+            };
+            self.conn.onmessage = function(event) {
+                //console.log(event);
+                var msg = JSON.parse(event.data);
+                if(msg.seq_reply) {
+                    if(self.responseCallbacks[msg.seq_reply]) {
+                        self.responseCallbacks[msg.seq_reply](msg);
+                        delete self.responseCallbacks[msg.seq_reply];
+                    }
+                } else {
+                    switch (msg.event) {
+                        case "posted":
+                            var post = JSON.parse(msg.data.post);
+                            post['sender_name'] = msg.data.sender_name;
+                            post['message'] = marked(post['message']); //render markdown
+                            self._addPost(post);
+                            //console.log(post);
+                            break;
+                        case "post_edited":
+                            var post = JSON.parse(msg.data.post);
+                            post['message'] = marked(post['message']); //render markdown
+                            self._updatePost(post);
+                            break;
+                        case "status_change":
+                            var userId = msg.data.user_id;
+                            var status = msg.data.status;
+                            self._changeStatusByUserId(userId, status);
+                            break;
+                        case "reaction_added":
+                            if(self.options.acknowledgement) {
+                                var reaction = JSON.parse(msg.data.reaction);
+                                if(reaction.emoji_name.localeCompare("ok") == 0) {
+                                    self.element
+                                        .find('.ack[data-id="'+reaction.post_id+'"]').addClass('ack-sent')
+                                        .find('span').removeClass('fa-check').addClass('fa-check-square-o');
+                                }
+                            }
+                            break;
+                    }
+                }
+            };
+        },
         _sendWebsocketMessage: function(action, data, callback) {
             var msg = {
                 "action": action,
