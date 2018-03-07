@@ -222,6 +222,7 @@
                         $("#send-form").submit();
                     }
                 }
+                self._typing();
             });
 
             //detect scroll
@@ -886,6 +887,11 @@
         _sendGetStatuses: function() {
             var self = this;
             this._sendWebsocketMessage("get_statuses", null, function(data){self._changeStatuses(data)});
+        },
+        _typing: function() {
+            var data = {};
+            data.channel_id = this.currentChannelId;
+            this._sendWebsocketMessage("user_typing", data, null);
         },
         /**
          * Return true is chat is minimized
