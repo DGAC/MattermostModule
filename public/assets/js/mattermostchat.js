@@ -551,7 +551,7 @@
             var date = moment(data.update_at);
             var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
             var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
-            var post = $('<div class="row message-body"  data-id="'+data.id+'">' +
+            var post = $('<div class="row message-body"  data-id="'+data.id+'" data-user_id="'+data.user_id+'">' +
                 '<div class="col-sm-12 message-main-receiver">' +
                 '<div class="receiver">' +
                 '<div class="message-text">' +
@@ -574,10 +574,26 @@
             if(data['images']){
                 this._addImagesToPost(data.images, post);
             }
-            if(reverse === undefined){
+            if(reverse === undefined) {
+                var previousPost = this.element.find('.message-body').last();
                 $("#conversation").append(post);
+                if(previousPost.length > 0 && previousPost.data('user_id').localeCompare(data.user_id) == 0) {
+                    post.addClass('following');
+                    previousPost.addClass('followed');
+                    if(previousPost.find('.message-datetime').text().localeCompare(dateString) == 0) {
+                        previousPost.find('.message-time').addClass('mini');
+                    }
+                }
             } else {
+                var previousPost = this.element.find('.message-body').first();
                 post.insertAfter('.message-previous');
+                if(previousPost.length > 0 && previousPost.data('user_id').localeCompare(data.user_id) == 0) {
+                    post.addClass('followed');
+                    previousPost.addClass('following');
+                    if(previousPost.find('.message-datetime').text().localeCompare(dateString) == 0) {
+                        post.find('.message-time').addClass('mini');
+                    }
+                }
             }
         },
         _addOtherPost: function(data, reverse) {
@@ -585,7 +601,7 @@
             var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
             var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
             var postid = data.id;
-            var post = $('<div class="row message-body" data-id="'+postid+'">' +
+            var post = $('<div class="row message-body" data-id="'+postid+'" data-user_id="'+data.user_id+'">' +
                 '<div class="col-sm-12 message-main-sender">' +
                     '<div class="sender">' +
                         '<div class="message-text">' +
@@ -617,10 +633,27 @@
             if(data['images']){
                 this._addImagesToPost(data.images, post);
             }
+
             if(reverse === undefined) {
+                var previousPost = this.element.find('.message-body').last();
                 $("#conversation").append(post);
+                if(previousPost.length > 0 && previousPost.data('user_id').localeCompare(data.user_id) == 0) {
+                    post.addClass('following');
+                    previousPost.addClass('followed');
+                    if(previousPost.find('.message-datetime').text().localeCompare(dateString) == 0) {
+                        previousPost.find('.message-time').addClass('mini');
+                    }
+                }
             } else {
+                var previousPost = this.element.find('.message-body').first();
                 post.insertAfter('.message-previous');
+                if(previousPost.length > 0 && previousPost.data('user_id').localeCompare(data.user_id) == 0) {
+                    post.addClass('followed');
+                    previousPost.addClass('following');
+                    if(previousPost.find('.message-datetime').text().localeCompare(dateString) == 0) {
+                        post.find('.message-time').addClass('mini');
+                    }
+                }
             }
         },
         _addImagesToPost: function(images, post) {
@@ -969,7 +1002,6 @@
                     return false; //break loop
                 }
             });
-            console.log('outofview '+outOfView);
             return outOfView;
         }
     });

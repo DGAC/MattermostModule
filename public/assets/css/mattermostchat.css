@@ -473,6 +473,16 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   flex-direction: row-reverse;
 }
 
+.message-body.followed .message-main-sender, .message-body.followed .message-main-receiver {
+  margin-bottom: 0px;
+  padding-bottom: 0px !important;
+}
+
+.message-body.following .message-main-sender, .message-body.following .message-main-receiver {
+  margin-top: 0px !important;
+  padding-top: 0px !important;
+}
+
 .message-text {
   margin: 0 !important;
   padding: 5px !important;
@@ -503,6 +513,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 }
 
+.message-time.mini {
+  line-height: 0px;
+  color: transparent;
+  text-shadow: initial;
+}
+
 .receiver {
   width: auto !important;
   padding: 4px 10px 7px !important;
@@ -523,6 +539,26 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
   text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
   display: inline-block;
   word-wrap: break-word;
+}
+
+.message-body.followed .sender {
+  border-radius: 10px 10px 0 0px;
+}
+
+.message-body.following .sender {
+  border-radius: 0px 0px 0 10px;
+}
+
+.message-body.followed .receiver {
+  border-radius: 10px 10px 0 0px;
+}
+
+.message-body.following .receiver {
+  border-radius: 0px 0px 10px 0px;
+}
+
+.message-body.following.followed .sender, .message-body.following.followed .receiver {
+  border-radius: 0px 0px 0px 0px;
 }
 
 .ack {
