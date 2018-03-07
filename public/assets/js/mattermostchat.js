@@ -58,7 +58,8 @@
             minimized: false,
             acknowledgement: false,
             utc: false,
-            dateFormat : "ddd D, HH:mm"
+            dateFormat : "ddd D, HH:mm",
+            monochannel: false
         },
         myId: "",
         currentChannelId: "",
@@ -342,6 +343,11 @@
             })).then(function(){
                 self._websocketConnect();
             });
+
+            if(self.options.monochannel == true && self.options.channelId.length > 0) {
+                //disable other channels
+                self.element.find('.heading-groups').hide();
+            }
         },
         /* *************** */
         /*  Public methods */
@@ -470,6 +476,10 @@
             }
         },
         _alertPost: function(channelId, alert){
+            if(this.options.monochannel == true && channelId.localeCompare(this.options.channelId) !== 0) {
+                //mono channel and post in a different channel -> no alert
+                return;
+            }
             if(channelId.localeCompare(this.currentChannelId) == 0) {
                 if(this._isMinimized() && (alert === undefined || alert == true)) {
                     if(this.groupIds.includes(channelId)) {
