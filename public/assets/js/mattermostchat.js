@@ -991,6 +991,8 @@
             if (!this.userScroll || force == true) {
                 //go to the last message only if no user scroll
                 container.scrollTop(container[0].scrollHeight);
+                //force hide unread messages
+                this.element.find('.alert-new-message').hide();
             }
         },
         _elementsOutOfView:function() {
