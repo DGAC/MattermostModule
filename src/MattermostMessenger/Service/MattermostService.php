@@ -347,5 +347,16 @@ class MattermostService
             error_log(print_r(json_decode($result->getBody()), true));
         }
     }
+
+    public function getUnreadMessages($userId, $channelId)
+    {
+        $result = $this->getClient()->getChannelModel()->getUnreadMessages($userId, $channelId);
+        if($result->getStatusCode() == 200) {
+            return json_decode($result->getBody());
+        } else {
+            error_log('Erreur '.$result->getStatusCode());
+            error_log(print_r(json_decode($result->getBody()), true));
+        }
+    }
 }
 

@@ -91,6 +91,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 }
 
+img.user-typing {
+  margin-top: 5px;
+  float: right;
+  display:none;
+}
 
 .heading {
   padding: 10px 16px 10px 15px;
@@ -426,7 +431,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 .message {
   padding: 0 !important;
   margin: 0 0 5px 0 !important;
-  background: url("w.jpg") no-repeat fixed center;
+  /*background: url("w.jpg") no-repeat fixed center;*/
   background-size: cover;
   overflow-y: auto;
   border: 1px solid #f7f7f7;

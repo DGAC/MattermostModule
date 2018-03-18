@@ -288,4 +288,16 @@ class MattermostChatController extends AbstractActionController
         return new JsonModel($json);
     }
 
+    public function getUnreadMessagesAction()
+    {
+        $json = array();
+        $userId = $this->params()->fromQuery('userid', null);
+        $channelId = $this->params()->fromQuery('channelid', null);
+        if($userId !== null && $channelId !== null) {
+            $result = $this->mattermost->getUnreadMessages($userId, $channelId);
+            $json['number'] = $result->msg_count;
+        }
+        return new JsonModel($json);
+    }
+
 }

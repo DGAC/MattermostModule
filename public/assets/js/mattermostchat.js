@@ -152,14 +152,16 @@
                     if(numberUnread.length > 0) {
                         numberUnread = parseInt(numberUnread);
                         var totalUnread = parseInt(self.element.find('.heading-groups span').text());
-                        var badge = self.element.find('.chat-reduce span.badge');
-                        var newTotal = totalUnread - numberUnread;
-                        if(newTotal == 0) {
-                            self.element.find('.heading-groups span').text("");
-                            badge.text("");
-                        } else {
-                            self.element.find('.heading-groups span').text(newTotal);
-                            badge.text(newTotal);
+                        if(!isNaN(totalUnread)) {
+                            var badge = self.element.find('.chat-reduce span.badge');
+                            var newTotal = totalUnread - numberUnread;
+                            if (newTotal == 0) {
+                                self.element.find('.heading-groups span').text("");
+                                badge.text("");
+                            } else {
+                                self.element.find('.heading-groups span').text(newTotal);
+                                badge.text(newTotal);
+                            }
                         }
                     }
                     me.find('span.unread-messages').text("");
@@ -368,7 +370,7 @@
             this.element.find('.sideBar ul').empty();
             this.element.find('.message-body').remove();
             this.element.find('.channel-name').text(channelName);
-            //sometimes there's a race condition at startup tha add the icon twice
+            //sometimes there's a race condition at startup that add the icon twice
             if(this.element.find('.groupid[data-id="' + channelId + '"] .sideBar-time i').length == 0) {
                 this.element.find('.groupid[data-id="' + channelId + '"] .sideBar-time').append('<i class="fa fa-check fa-2x"></i>');
             }
@@ -508,14 +510,15 @@
                         } else {
                             span.text("1");
                         }
+                        var totalCount = 0;
+                        $('#groups span.unread-messages').each(function(i, item){
+                            var me = $(this);
+                            if(me.text().length > 0){
+                                totalCount += parseInt(me.text());
+                            }
+                        });
                         var total = this.element.find('.chat-reduce span.badge');
-                        var totalNumber = 0;
-                        if(total.text().length > 0) {
-                            totalNumber = parseInt(total.text())+1;
-                        } else {
-                            totalNumber = 1;
-                        }
-                        total.text(totalNumber);
+                        total.text(totalCount);
                     }
                 }
             } else {
@@ -527,14 +530,15 @@
                         span.text("1");
                     }
                     var total = this.element.find('.heading-groups span');
-                    var totalNumber = 0;
-                    if(total.text().length > 0) {
-                        totalNumber = parseInt(total.text())+1;
-                    } else {
-                        totalNumber = 1;
-                    }
-                    total.text(totalNumber);
-                    this.element.find('.chat-reduce span.badge').text(totalNumber);
+                    var totalCount = 0;
+                    $('#groups span.unread-messages').each(function(i, item){
+                        var me = $(this);
+                        if(me.text().length > 0){
+                            totalCount += parseInt(me.text());
+                        }
+                    });
+                    total.text(totalCount);
+                    this.element.find('.chat-reduce span.badge').text(totalCount);
                     this._alert();
                 }
             }
@@ -721,9 +725,9 @@
                 '</div>'+
                 '<div class="col-sm-9 col-xs-9 sideBar-main">'+
                 '<div class="row">'+
-                '<div class="col-sm-8 col-xs-8 sideBar-name fullname">'+
-                '<span class="name-meta">'+
-                '</span>'+
+                '<div class="col-sm-8 col-xs-8 sideBar-name">'+
+                '<span class="name-meta fullname">'+
+                '</span><img title="En train d\'écrire..." src="./assets/img/ajax-loader.gif" class="user-typing">'+
                 '</div>'+
                 '<div class="col-sm-4 col-xs-4 pull-right sideBar-time">'+
                 '<span class="time-meta pull-right lastseen">'+
@@ -826,6 +830,10 @@
             var values = [];
             var groupIds = [];
             for(var i in data) {
+                if(data[i].name.length == 0){
+                    //TODO add support to DM
+                    continue;
+                }
                 var value = {
                     spanname: data[i].name,
                     initial: data[i].name.charAt(0).toUpperCase(),
@@ -846,6 +854,14 @@
                     $(this).find('.sideBar-time').append('<i class="fa fa-check fa-2x"></i>');
                 }
             });
+            //add unread messages
+            for(var i in self.groupIds) {
+                $.getJSON(this.options.baseUrl+'/mattermost/mattermostchat/getUnreadMessages?userid='+this.myId+'&channelid='+self.groupIds[i], function(data){
+                    if(data.number > 0) {
+                       $('li.groupid[data-id="'+self.groupIds[i]+'"] span.unread-messages').text(data.number);
+                   }
+                });
+            }
         },
         _refresh: function() {
             var self = this;
@@ -902,6 +918,9 @@
                     }
                 } else {
                     switch (msg.event) {
+                        case "typing":
+                            //console.log(msg);
+                            break;
                         case "posted":
                             var post = JSON.parse(msg.data.post);
                             post['sender_name'] = msg.data.sender_name;
