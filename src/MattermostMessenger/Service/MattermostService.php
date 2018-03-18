@@ -89,6 +89,16 @@ class MattermostService
         return $this->myId;
     }
 
+    public function getServerUrl()
+    {
+        return $this->mattermost['server_url'];
+    }
+
+    public function getTeamName()
+    {
+        return $this->mattermost['team_id'];
+    }
+
     /**
      * @param $message
      * @param $channelId

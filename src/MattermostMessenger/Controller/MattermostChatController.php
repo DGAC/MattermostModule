@@ -63,6 +63,11 @@ class MattermostChatController extends AbstractActionController
             $result = $this->mattermost->patchMessage($post['postId'], $post['comment']);
             $response = json_decode($result->getBody());
             $json['id'] = $response->id;
+            //forge permalink of the edited post
+            $permalink = 'https://'.$this->mattermost->getServerUrl().'/'
+                . $this->mattermost->getTeamName()
+                . '/pl/' . $response->id;
+            $json['permalink'] = $permalink;
         }
         return new JsonModel($json);
     }
@@ -117,7 +122,9 @@ class MattermostChatController extends AbstractActionController
             $json[$key]['user_id'] = $value->user_id;
             $json[$key]['sender_name'] = $this->mattermost->getUsername($value->user_id);
             $json[$key]['message'] = $this->markdownService->render(str_replace("\n", "\n\n", $value->message));
+            $json[$key]['create_at'] = $value->create_at;
             $json[$key]['update_at'] = $value->update_at;
+            $json[$key]['edit_at'] = $value->edit_at;
             $json[$key]['channel_id'] = $value->channel_id;
             $json[$key]['id'] = $key;
             if(isset($value->file_ids)) {

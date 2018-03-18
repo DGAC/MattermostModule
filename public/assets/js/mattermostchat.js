@@ -407,16 +407,29 @@
             var post = {'comment': message};
             var self = this;
             $.post(this.options.baseUrl+'/mattermost/mattermostchat/sendMessage?channelid='+this.currentChannelId, post, function(data){
-                successCallback(data);
+                if(successCallback !== undefined) {
+                    successCallback(data);
+                }
                 self._scrollToBottom(true);
                 }, 'json');
         },
-        patchMessage: function(message, postId){
+        /**
+         *
+         * @param message
+         * @param postId
+         * @param successCallback
+         */
+        patchMessage: function(message, postId, successCallback){
+            var self = this;
             var post = {
                 'comment': message,
                 'postId': postId
             };
-            $.post(this.options.baseUrl+'/mattermost/MattermostChat/patchMessage', post);
+            $.post(this.options.baseUrl+'/mattermost/MattermostChat/patchMessage', post, function (data) {
+                if(successCallback !== undefined) {
+                    successCallback(data);
+                }
+            });
         },
         /**
          * Change my status
@@ -463,13 +476,17 @@
             });
             if(messages.length == 1) {
                 messages.find('.message-text').html(post.message);
-                var date = moment(post.update_at);
+                var date = moment(post.create_at);
+                var editString ='';
+                if(post.edit_at !== 0) {
+                    editString = ' (édité le ' +
+                        (this.options.utc ? moment(post.edit_at).utc().format(this.options.dateFormat) : moment(post.edit_at).format(this.options.dateFormat)) +
+                        ')';
+                }
                 var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
                 var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
                 messages.find('.message-time').attr('title', fullDateString);
-                messages.find('.message-datetime').text(dateString);
-                //TODO by doing this posts' order will be different at startup
-                messages.detach().appendTo('#conversation');
+                messages.find('.message-datetime').text(dateString+editString);
             }
             //else message not displayed
             //alert if post is not mine
@@ -548,7 +565,13 @@
             }
         },
         _addMyPost: function(data, reverse) {
-            var date = moment(data.update_at);
+            var date = moment(data.create_at);
+            var editString = '';
+            if(data.edit_at !== 0) {
+                editString = ' (édité le ' +
+                        (this.options.utc ? moment(data.edit_at).utc().format(this.options.dateFormat) : moment(data.edit_at).format(this.options.dateFormat)) +
+                        ')';
+            }
             var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
             var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
             var post = $('<div class="row message-body"  data-id="'+data.id+'" data-user_id="'+data.user_id+'">' +
@@ -558,7 +581,7 @@
                 data.message +
                 '</div>' +
                 '<span class="message-time pull-right" title="'+fullDateString+'">' +
-                '<span class="message-datetime">'+dateString+'</span>'+
+                '<span class="message-datetime">'+dateString+editString+'</span>'+
                 '</span>' +
                 '</div>' +
                 '</div>' +
@@ -597,7 +620,13 @@
             }
         },
         _addOtherPost: function(data, reverse) {
-            var date = moment(data.update_at);
+            var date = moment(data.create_at);
+            var editString = '';
+            if(data.edit_at !== 0) {
+                var editString = ' (édité le ' +
+                    (this.options.utc ? moment(data.edit_at).utc().format(this.options.dateFormat) : moment(data.edit_at).format(this.options.dateFormat)) +
+                    ')';
+            }
             var dateString = this.options.utc ? date.utc().format(this.options.dateFormat) : date.format(this.options.dateFormat);
             var fullDateString = this.options.utc ? date.utc().format("LLLL") : date.format("LLLL");
             var postid = data.id;
@@ -608,7 +637,7 @@
                         data.message +
                         '</div>' +
                         '<span class="message-time pull-right" title="'+fullDateString+'">' +
-                        data.sender_name + ' - <span class="message-datetime">' + dateString+'</span>'+
+                        data.sender_name + ' - <span class="message-datetime">' + dateString+editString+'</span>'+
                         '</span>' +
                     '</div>' +
                 '</div>' +
