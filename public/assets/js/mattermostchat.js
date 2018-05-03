@@ -254,7 +254,7 @@
             this.element.on('click', "#previousMessages", function(e){
                 var postid = self.element.find("#conversation .message-body").first().data('id');
                 $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId+'&beforeid='+postid, function(data){
-                    self._addPosts(data, true);
+                    self._addPosts(data, true, false);
                 });
             });
 
@@ -562,7 +562,7 @@
             if(this.myId.localeCompare(post.user_id) !== 0){
                 this._alertPost(post.channel_id, alert);
             }
-            if(this._elementsOutOfView()) {
+            if(this._elementsOutOfView() && !reverse) { //do not alert if reverse mode as new posts are added to the top
                 this.element.find('.alert-new-message').show();
             } else {
                 this.element.find('.alert-new-message').hide();
