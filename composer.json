@@ -1,13 +1,13 @@
 {
-  "name": "brunospy/mattermostmodule",
+  "name": "dgacfr/mattermostmodule",
   "description": "Module to use Mattermost in a Zend Framework and Bootstrap application",
   "type": "library",
   "keywords": ["mattermost", "chat", "bootstrap", "zend framework", "zf2"],
-  "homepage": "https://github.com/BrunoSpy/MattermostModule",
+  "homepage": "https://github.com/DGACfr/MattermostModule",
   "authors": [
   {
     "name": "Bruno Spyckerelle",
-    "email": "bruno@spyckerelle.fr"
+    "email": "bruno.spyckerelle@aviation-civile.gouv.fr"
   }
 ],
   "require": {
