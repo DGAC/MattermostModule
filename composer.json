@@ -1,9 +1,9 @@
 {
-  "name": "dgacfr/mattermostmodule",
+  "name": "dgac/mattermostmodule",
   "description": "Module to use Mattermost in a Zend Framework and Bootstrap application",
   "type": "library",
   "keywords": ["mattermost", "chat", "bootstrap", "zend framework", "zf2"],
-  "homepage": "https://github.com/DGACfr/MattermostModule",
+  "homepage": "https://github.com/DGAC/MattermostModule",
   "authors": [
   {
     "name": "Bruno Spyckerelle",
