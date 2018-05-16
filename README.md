@@ -4,7 +4,7 @@
 
 ## Installation
 
-```composer require dgacfr/mattermostmodule```
+```composer require dgac/mattermostmodule```
 
 ## Configuration
 
