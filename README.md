@@ -4,7 +4,7 @@
 
 ## Installation
 
-```composer require brunospy/mattermostmodule```
+```composer require dgacfr/mattermostmodule```
 
 ## Configuration
 
