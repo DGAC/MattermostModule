@@ -2,6 +2,10 @@
 
 **WIP : This module is usable but it needs more love :)**
 
+## Mandatory screenshot
+
+![screenshot](https://raw.githubusercontent.com/DGAC/MattermostModule/master/mattermostmodule.png)
+
 ## Installation
 
 ```composer require dgac/mattermostmodule```
