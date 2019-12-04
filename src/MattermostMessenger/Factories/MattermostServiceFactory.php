@@ -17,9 +17,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 namespace MattermostMessenger\Factories;
 
+use Interop\Container\ContainerInterface;
 use MattermostMessenger\Service\MattermostService;
-use Zend\ServiceManager\FactoryInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
  *
@@ -29,9 +29,9 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 class MattermostServiceFactory implements FactoryInterface
 {
 
-    public function createService(ServiceLocatorInterface $serviceLocator)
+    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        return new MattermostService($serviceLocator->get('config'));
+        return new MattermostService($container->get('config'));
     }
 }
 
