@@ -44,7 +44,7 @@ return array(
     ),
     'controllers' => array(
         'factories' => array(
-            'MattermostMessenger\Controller\MattermostChat' => 'MattermostMessenger\Controller\Factory\MattermostChatControllerFactory',
+            'MattermostMessenger\Controller\Mattermostchat' => 'MattermostMessenger\Controller\Factory\MattermostChatControllerFactory',
         )
     ),
     'view_helpers' => array(

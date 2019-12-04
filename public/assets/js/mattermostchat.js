@@ -241,7 +241,7 @@
             this.element.on('click', '.ack', function(event){
                 var postid = $(this).data('id');
                 var me = $(this);
-                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/ack?postid='+postid, function(data){
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/ack?postid='+postid, function(data){
                     if(self.connFailCount !== 0) {
                         //if no websocket, we rely on status code to know if reaction correctly added
                         if(data.result == 200) {
@@ -253,7 +253,7 @@
 
             this.element.on('click', "#previousMessages", function(e){
                 var postid = self.element.find("#conversation .message-body").first().data('id');
-                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId+'&beforeid='+postid, function(data){
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getLastPosts?channelid='+self.currentChannelId+'&beforeid='+postid, function(data){
                     self._addPosts(data, true, false);
                 });
             });
@@ -274,7 +274,7 @@
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getDefaultChannelId?teamid=' + self.options.teamName, function (data) {
                     self.currentChannelId = data.channelid;
                 }),
-                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getMyID', function(data){
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getMyID', function(data){
                     self.myId = data.id;
                 })
             ).then(function(data, textStatus, jqHXR){
@@ -288,7 +288,7 @@
                 });
                 //get my groups once and for all
                 self.element.find('.compose-sideBar ul').empty();
-                $.getJSON(self.options.baseUrl + '/mattermost/mattermostChat/getMyChannels?teamid=' + self.options.teamName, function (data) {
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getMyChannels?teamid=' + self.options.teamName, function (data) {
                     self._addGroups(data);
                 });
             }).fail(function(data, textStatus, jqHXR){
@@ -342,7 +342,7 @@
                     }
                 });
 
-            $.when($.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getMyToken', function(data){
+            $.when($.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getMyToken', function(data){
                 self.options.token = data.token;
             })).then(function(){
                 self._websocketConnect();
@@ -375,7 +375,7 @@
                 this.element.find('.groupid[data-id="' + channelId + '"] .sideBar-time').append('<i class="fa fa-check fa-2x"></i>');
             }
             self.currentChannelId = channelId;
-            $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getLastPosts?channelid='+self.currentChannelId, function(data, textStatus, jqHXR){
+            $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getLastPosts?channelid='+self.currentChannelId, function(data, textStatus, jqHXR){
                 self._addPosts(data, false, alert);
                 if(self.connFailCount !== 0) { //no websocket : start polling
                     //periodic refresh
@@ -387,7 +387,7 @@
             });
             //fetch members
             $.when(
-                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getChannelMembers?channelid='+self.currentChannelId, function(data){
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getChannelMembers?channelid='+self.currentChannelId, function(data){
                     self._addUsers(data);
                 })
             ).then(
@@ -427,7 +427,7 @@
                 'comment': message,
                 'postId': postId
             };
-            $.post(this.options.baseUrl+'/mattermost/MattermostChat/patchMessage', post, function (data) {
+            $.post(this.options.baseUrl+'/mattermost/mattermostchat/patchMessage', post, function (data) {
                 if(successCallback !== undefined) {
                     successCallback(data);
                 }
@@ -594,7 +594,7 @@
                 //this key exists only if posts came from websocket
                 //we need to request the server via api
                 var self = this;
-                $.getJSON(this.options.baseUrl + '/mattermost/MattermostChat/getImages?filesId='+data.file_ids, function(data){
+                $.getJSON(this.options.baseUrl + '/mattermost/mattermostchat/getImages?filesId='+data.file_ids, function(data){
                     self._addImagesToPost(data, post);
                 });
             }
@@ -647,7 +647,7 @@
                 '</div>' +
                 '</div>');
             if(this.options.acknowledgement == true) {
-                $.getJSON(this.options.baseUrl + '/mattermost/MattermostChat/isack?postid=' + postid, function (data) {
+                $.getJSON(this.options.baseUrl + '/mattermost/mattermostchat/isack?postid=' + postid, function (data) {
                     if (data.ack == true) {
                         post.find('.message-main-sender').append('<div class="ack ack-sent"><span class="fa fa-check-square-o"></span></div>');
                     } else {
@@ -659,7 +659,7 @@
                 //this key exists only if posts came from websocket
                 //we need to request the server via api
                 var self = this;
-                $.getJSON(this.options.baseUrl + '/mattermost/MattermostChat/getImages?filesId='+data.file_ids, function(data){
+                $.getJSON(this.options.baseUrl + '/mattermost/mattermostchat/getImages?filesId='+data.file_ids, function(data){
                     self._addImagesToPost(data, post);
                 });
             }
@@ -767,7 +767,7 @@
             var self = this;
             $('.user').each(function(index){
                 var me = $(this);
-                $.getJSON(self.options.baseUrl + '/mattermost/MattermostChat/getUserStatus?userid='+$(this).data('id'), function(data){
+                $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getUserStatus?userid='+$(this).data('id'), function(data){
                     self._changeStatus(me.find('.user-status'), data.status);
                 });
             });
