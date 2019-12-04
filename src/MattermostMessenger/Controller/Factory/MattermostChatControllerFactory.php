@@ -17,18 +17,17 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 namespace MattermostMessenger\Controller\Factory;
 
+use Interop\Container\ContainerInterface;
 use MattermostMessenger\Controller\MattermostChatController;
-use Zend\ServiceManager\FactoryInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\Factory\FactoryInterface;
 
 class MattermostChatControllerFactory implements FactoryInterface {
 
-    public function createService(ServiceLocatorInterface $serviceLocator)
+    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $service = $serviceLocator->getServiceLocator();
         return new MattermostChatController(
-            $service->get('mattermostservice'),
-            $service->get('MaglMarkdown\MarkdownService')
+            $container->get('mattermostservice'),
+            $container->get('MaglMarkdown\MarkdownService')
         );
     }
 
