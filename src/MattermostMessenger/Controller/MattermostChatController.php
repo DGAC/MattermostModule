@@ -19,8 +19,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 namespace MattermostMessenger\Controller;
 use MaglMarkdown\Service\Markdown;
 use MattermostMessenger\Service\MattermostService;
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\JsonModel;
+use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\View\Model\JsonModel;
 
 
 /**

@@ -1,24 +1,30 @@
 {
-  "name": "dgac/mattermostmodule",
-  "description": "Module to use Mattermost in a Zend Framework and Bootstrap application",
-  "type": "library",
-  "keywords": ["mattermost", "chat", "bootstrap", "zend framework", "zf2"],
-  "homepage": "https://github.com/DGAC/MattermostModule",
-  "authors": [
-  {
-    "name": "Bruno Spyckerelle",
-    "email": "bruno.spyckerelle@aviation-civile.gouv.fr"
-  }
-],
-  "require": {
-    "gnello/php-mattermost-driver": "^2.4",
-    "zendframework/zend-mvc": "^3.0",
-    "maglnet/magl-markdown": "~1.1"
-  },
-  "license": "GPL-3.0-or-later",
-  "autoload": {
-    "psr-4": {
-      "MattermostMessenger\\": "src/MattermostMessenger/"
+    "name": "dgac/mattermostmodule",
+    "description": "Module to use Mattermost in a Zend Framework and Bootstrap application",
+    "type": "library",
+    "keywords": [
+        "mattermost",
+        "chat",
+        "bootstrap",
+        "laminas"
+    ],
+    "homepage": "https://github.com/DGAC/MattermostModule",
+    "authors": [
+        {
+            "name": "Bruno Spyckerelle",
+            "email": "bruno.spyckerelle@aviation-civile.gouv.fr"
+        }
+    ],
+    "require": {
+        "gnello/php-mattermost-driver": "^2.4",
+        "laminas/laminas-mvc": "^3.0",
+        "maglnet/magl-markdown": "~1.1",
+        "laminas/laminas-dependency-plugin": "^1.0"
+    },
+    "license": "GPL-3.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "MattermostMessenger\\": "src/MattermostMessenger/"
+        }
     }
-  }
 }

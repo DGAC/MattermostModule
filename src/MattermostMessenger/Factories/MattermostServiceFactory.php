@@ -19,7 +19,7 @@ namespace MattermostMessenger\Factories;
 
 use Interop\Container\ContainerInterface;
 use MattermostMessenger\Service\MattermostService;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 /**
  *

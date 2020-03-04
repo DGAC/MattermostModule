@@ -1,6 +1,8 @@
-# Chat module for ZF2 and Bootstrap 3
+# Chat module for Laminas and Bootstrap 3
 
 **WIP : This module is usable but it needs more love :)**
+
+** 0.2.x version are for ZF2 ; 0.3.x and further for ZF3/Laminas **
 
 ## Mandatory screenshot
 

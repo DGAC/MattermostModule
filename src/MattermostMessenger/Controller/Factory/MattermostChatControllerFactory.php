@@ -19,7 +19,7 @@ namespace MattermostMessenger\Controller\Factory;
 
 use Interop\Container\ContainerInterface;
 use MattermostMessenger\Controller\MattermostChatController;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class MattermostChatControllerFactory implements FactoryInterface {
 
