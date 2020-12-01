@@ -19,7 +19,7 @@
         "gnello/php-mattermost-driver": "^2.4",
         "laminas/laminas-mvc": "^3.0",
         "maglnet/magl-markdown": "~1.1",
-        "laminas/laminas-dependency-plugin": "^1.0"
+        "laminas/laminas-dependency-plugin": "^2.0"
     },
     "license": "GPL-3.0-or-later",
     "autoload": {
