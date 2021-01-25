@@ -43,6 +43,7 @@ echo $this->headLink()
   - Moment.js : http://momentjs.com/
   - List.js : http://listjs.com/
   - Marked : https://github.com/chjj/marked
+  - JS Cookie : https://github.com/js-cookie/js-cookie
 
 Example :
 
@@ -54,6 +55,7 @@ echo $this->headScript()
     ->appendFile($this->basePath() . '/<path to your momentjs>/moment.min.js')
     ->appendFile($this->basePath() . '/<path to your list.js>/list.min.js')
     ->appendFile($this->basePath() . '/<path to your marked.js>/marked.min.js')
+    ->appendFile($this->basePath() . '/<path to your js-cookie>/js-cookie.js')
     ->appendFile($this->basePath() . '/assets/js/mattermostchat.js');
 ```
  
