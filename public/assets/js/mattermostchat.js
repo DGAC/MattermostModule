@@ -345,22 +345,23 @@
                 $.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getMyChannels?teamid=' + self.options.teamName, function (data) {
                     self._addGroups(data);
                 });
+                if(self.options.token !== "") {
+                    self._websocketConnect();
+                } else {
+                    $.when($.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getMyToken', function (data) {
+                        self.options.token = data.token;
+                        Cookies.set('mattermosttoken', data.token);
+                    })).then(function () {
+                        self._websocketConnect();
+                    });
+                }
             }).fail(function(data, textStatus, jqHXR){
                 self.element.find('#conversation')
                     .removeClass('load')
                     .append('<p class="bg-danger">'+data.responseJSON.detail+'</p>');
                 self.element.find('.chat-reduce button').addClass('btn-danger').removeClass('btn-info');
             });
-            if(self.options.token !== "") {
-                self._websocketConnect();
-            } else {
-                $.when($.getJSON(self.options.baseUrl + '/mattermost/mattermostchat/getMyToken', function (data) {
-                    self.options.token = data.token;
-                    Cookies.set('mattermosttoken', data.token);
-                })).then(function () {
-                    self._websocketConnect();
-                });
-            }
+            
         },
         minimize : function() {
             this.element.find('#reduce-chat').trigger('click');
