@@ -281,9 +281,12 @@ class MattermostChatController extends AbstractActionController
         $json = array();
         $postId = $this->params()->fromQuery('postid', null);
         $myReactions = $this->mattermost->getMyReactions($postId);
-        $ok = array_filter($myReactions, function($v){
-            return strcmp($v['emoji_name'], 'ok') == 0;
-        });
+        $ok = array();
+        if($myReactions !== null) {
+            $ok = array_filter($myReactions, function ($v) {
+                return strcmp($v['emoji_name'], 'ok') == 0;
+            });
+        }
         $json['ack'] = count($ok) == 1;
         return new JsonModel($json);
     }

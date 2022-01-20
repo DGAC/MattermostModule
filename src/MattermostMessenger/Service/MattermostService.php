@@ -317,9 +317,13 @@ class MattermostService
         $result = $this->getClient()->getPostModel()->getReactions($postId);
         if($result->getStatusCode() == 200) {
             $reactions = json_decode($result->getBody(), true);
-            $myReactions = array_filter($reactions, function($v){
-                return strcmp($v['user_id'], $this->getMyId()) == 0;
-            });
+            if($reactions !== null) {
+                $myReactions = array_filter($reactions, function($v){
+                    return strcmp($v['user_id'], $this->getMyId()) == 0;
+                });
+            } else {
+                return null;
+            }
             return $myReactions;
         } else {
             error_log(print_r(json_decode($result->getBody()), true));
