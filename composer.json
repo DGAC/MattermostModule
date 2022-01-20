@@ -17,14 +17,19 @@
     ],
     "require": {
         "gnello/php-mattermost-driver": "^2.4",
-        "laminas/laminas-mvc": "^3.0",
-        "maglnet/magl-markdown": "~1.1",
+        "laminas/laminas-mvc": "^3.3",
+        "maglnet/magl-markdown": "~1.8",
         "laminas/laminas-dependency-plugin": "^2.0"
     },
     "license": "GPL-3.0-or-later",
     "autoload": {
         "psr-4": {
             "MattermostMessenger\\": "src/MattermostMessenger/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "laminas/laminas-dependency-plugin": true
         }
     }
 }

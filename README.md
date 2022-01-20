@@ -23,19 +23,19 @@
 * Add CSS files to your view. 
 
   - Bootstrap 3
-  - Font Awesome 4 
+  - Font Awesome 5
 
 Example : 
 
 ```php
 echo $this->headLink()
               ->appendStylesheet($this->basePath() . '/<path to your bootstrap>/bootstrap.min.css')
-              ->appendStylesheet($this->basePath() . '/assets/css/font-awesome.min.css')
+              ->appendStylesheet($this->basePath() . '/assets/css/font-awesome.all.min.css')
               ->appendStylesheet($this->basePath() . '/assets/css/mattermostchat.css');
 
 ```
 
-* Add javascript dependencies. 
+* Add javascript dependencies (see bower.json)
 
   - JQuery
   - JQuery-UI
